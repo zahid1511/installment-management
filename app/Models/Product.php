@@ -10,14 +10,21 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_id',
+        // Removed 'customer_id'
         'company',
         'model',
         'serial_no',
+        'price',
     ];
 
-    public function customer()
+    public function purchases()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->hasMany(Purchase::class);
+    }
+
+    // Optional: Get all customers who have purchased this product
+    public function customers()
+    {
+        return $this->hasManyThrough(Customer::class, Purchase::class);
     }
 }

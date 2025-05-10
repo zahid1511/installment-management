@@ -89,4 +89,18 @@ class CustomerController extends Controller
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
     }
+
+    public function statement(Customer $customer)
+    {
+        // Load related data through proper relationships
+        $customer->load([
+            'guarantors',
+            'purchases.product',
+            'purchases.installments' => function($query) {
+                $query->orderBy('due_date', 'asc');
+            }
+        ]);
+        
+        return view('customers.statement', compact('customer'));
+    }
 }

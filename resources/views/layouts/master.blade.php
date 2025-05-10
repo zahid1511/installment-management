@@ -57,48 +57,63 @@
                             +
                         </div>
                     </li>
+
                     <li class="{{ request()->is('dashboard') ? 'active' : '' }}">
-                        <a href="{{ route('dashboard') }}"><i class="fa fa-line-chart"></i> <span class="nav-label">Dashboard</span></a>
+                        <a href="{{ route('dashboard') }}"><i class="fa fa-dashboard"></i> <span class="nav-label">Dashboard</span></a>
                     </li>
+
+                    <li class="{{ request()->is('admin/customers*') ? 'active' : '' }}">
+                        <a href="{{ route('customers.index') }}"><i class="fa fa-users"></i> <span class="nav-label">Customers</span></a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/guarantors*') ? 'active' : '' }}">
+                        <a href="{{ route('guarantors.index') }}"><i class="fa fa-user-plus"></i> <span class="nav-label">Guarantors</span></a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/products*') ? 'active' : '' }}">
+                        <a href="{{ route('products.index') }}"><i class="fa fa-cube"></i> <span class="nav-label">Products</span></a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/recovery-officers*') ? 'active' : '' }}">
+                        <a href="{{ route('recovery-officers.index') }}"><i class="fa fa-user-circle-o"></i> <span class="nav-label">Recovery Officers</span></a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/purchases*') ? 'active' : '' }}">
+                        <a href="{{ route('purchases.index') }}"><i class="fa fa-shopping-cart"></i> <span class="nav-label">Purchases</span></a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/installments*') ? 'active' : '' }}">
+                        <a href="{{ route('installments.index') }}"><i class="fa fa-credit-card"></i> <span class="nav-label">Installments</span></a>
+                    </li>
+
+                    <!-- User Management section with better icons -->
                     <li class="{{ request()->is('profile') || request()->routeIs('admin.settings') ? 'active' : '' }}">
-                        <a href="#"><i class="fa fa-user-circle-o"></i> <span class="nav-label">User Management</span> <span class="fa arrow"></span></a>
+                        <a href="#"><i class="fa fa-user-circle"></i> <span class="nav-label">User Management</span> <span class="fa arrow"></span></a>
                         <ul class="nav nav-second-level {{ request()->is('profile') || request()->routeIs('admin.settings') ? 'collapse' : '' }}">
                             <li class="{{ request()->is('profile') ? 'active' : '' }}">
-                                <a href="{{ url('profile') }}">Profile</a>
+                                <a href="{{ url('profile') }}"><i class="fa fa-user"></i> Profile</a>
                             </li>
-                          </li>
-
                             <li class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}">
-                                <a href="{{ route('admin.settings') }}">General Setting</a>
+                                <a href="{{ route('admin.settings') }}"><i class="fa fa-cogs"></i> General Setting</a>
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('customers.index') }}"> <i class="bi bi-person-lines-fill"></i> Customers</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('guarantors.index') }}"><i class="bi bi-people-fill"></i> Guarantors</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('products.index') }}"><i class="bi bi-box-seam"></i> Products</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('installments.index') }}"><i class="bi bi-cash-stack"></i> Installments</a>
-                    </li>
+
+                    <!-- Settings section with better icons -->
                     <li class="{{ request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('role-assignment') || request()->routeIs('permissions') ? 'active' : '' }}">
-                        <a href="#"><i class="fa fa-adjust"></i> <span class="nav-label">Setting</span> <span class="fa arrow"></span></a>
+                        <a href="#"><i class="fa fa-cog"></i> <span class="nav-label">System Settings</span> <span class="fa arrow"></span></a>
                         <ul class="nav nav-second-level {{ request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('role-assignment') || request()->routeIs('permissions') ? 'collapse' : '' }}">
                             <li class="{{ request()->routeIs('admin.users') ? 'active' : '' }}">
-                                <a href="{{ route('admin.users') }}">Users</a>
+                                <a href="{{ route('admin.users') }}"><i class="fa fa-users"></i> Users</a>
                             </li>
                             <li class="{{ request()->routeIs('admin.roles') ? 'active' : '' }}">
-                                <a href="{{ route('admin.roles') }}">Roles</a>
+                                <a href="{{ route('admin.roles') }}"><i class="fa fa-shield"></i> Roles</a>
                             </li>
                             <li class="{{ request()->routeIs('role-assignment') ? 'active' : '' }}">
-                                <a href="{{ route('role-assignment') }}">Role Assignments</a>
+                                <a href="{{ route('role-assignment') }}"><i class="fa fa-user-secret"></i> Role Assignments</a>
                             </li>
                             <li class="{{ request()->routeIs('permissions') ? 'active' : '' }}">
-                                <a href="{{ route('permissions') }}">Permissions</a>
+                                <a href="{{ route('permissions') }}"><i class="fa fa-lock"></i> Permissions</a>
                             </li>
                         </ul>
                     </li>

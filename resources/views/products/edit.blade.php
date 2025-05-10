@@ -24,6 +24,11 @@
             <input type="text" class="form-control" id="serial_no" name="serial_no" value="{{ old('serial_no', $product->serial_no) }}" required>
         </div>
 
+        <div class="form-group">
+            <label for="price">Price</label>
+            <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $product->price) }}" step="0.01" min="0" required>
+        </div>
+
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
 </div>

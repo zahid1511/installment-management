@@ -11,27 +11,44 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\GuarantorController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\RecoveryOfficerController;
+use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\InstallmentController;
+use App\Http\Controllers\Admin\DashboardController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
+
 
 
 
 Route::group(['prefix' => 'admin', 'middleware' => ['role:Admin']], function () {
+    
     Route::get('/admin', [AdminHomeController::class, 'index'])->name('admin.dashboard');
 
-    // New
+    //Dashboard
+    Route::get('report', [DashboardController::class, 'report'])->name('admin.report');
 
-        Route::resource('customers', CustomerController::class);
-        Route::resource('guarantors', GuarantorController::class);
-        Route::resource('products', ProductController::class);
-        Route::resource('installments', InstallmentController::class);
+    //customers
+    Route::resource('customers', CustomerController::class);
+    Route::get('customers/{customer}/statement', [CustomerController::class, 'statement'])->name('customers.statement');
+    
+    //guarantors
+    Route::resource('guarantors', GuarantorController::class);
+    Route::post('guarantors/check', [GuarantorController::class, 'checkGuarantor'])->name('guarantors.check');
 
+    //products
+    Route::resource('products', ProductController::class);
 
+    
+    // recovery-officers
+    Route::resource('recovery-officers', RecoveryOfficerController::class);
+    
+    //purchases
+    Route::resource('purchases', PurchaseController::class);
+    Route::post('purchases/{purchase}/process-payment', [PurchaseController::class, 'processPayment'])->name('purchases.process-payment');
 
-    //End New
+    //installments
+    Route::resource('installments', InstallmentController::class);
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('admin.users');
@@ -40,12 +57,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['role:Admin']], function () 
         Route::post('/update', [UserController::class, 'update'])->name('user.update');
         Route::get('/delete/{id}', [UserController::class, 'delete'])->name('user.delete');
     });
+    
     Route::prefix('roles')->group(function () {
         Route::get('/', [UserController::class, 'getRolesIndex'])->name('admin.roles');
         Route::post('/store', [UserController::class, 'addRole'])->name('role.store');
         Route::post('/update', [UserController::class, 'updateRole'])->name('role.update');
         Route::get('/delete/{role}', [UserController::class, 'deleteRole'])->name('role.delete');
     });
+
     Route::prefix('role-assignment')->group(function () {
         Route::get('/', [RoleAssignmentController::class, 'index'])->name('role-assignment');
         Route::get('/user-role', [RoleAssignmentController::class, 'getUserRoles'])->name('user-role');
@@ -71,7 +90,6 @@ Route::group(['middleware' => ['role:Customer']], function () {
 Route::group(['middleware' => ['role:Admin|Customer']], function () {
 
 });
-
 
 
 Route::get('admin/dashboard', function () {

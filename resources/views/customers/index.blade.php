@@ -42,8 +42,9 @@
                     <td>{{ $customer->balance }}</td>
                     <td>{{ $customer->is_defaulter ? 'Yes' : 'No' }}</td>
                     <td>
-                        <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-sm btn-info">Edit</a>
-
+                        <a href="{{ route('customers.statement', $customer->id) }}" class="btn btn-sm btn-info">Statement</a>
+                        <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        
                         <form action="{{ route('customers.destroy', $customer->id) }}" method="POST" style="display:inline-block;">
                             @csrf
                             @method('DELETE')

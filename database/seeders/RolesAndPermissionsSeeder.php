@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+
 class RolesAndPermissionsSeeder extends Seeder
 {
     /**
@@ -18,14 +19,26 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Define permissions
         $permissions = [
-            'manage users',      // Admin-specific permissions
-            'manage roles',      // Admin-specific permissions
-            'general dashboard',    // Common permission
+            // Admin permissions
+            'manage users',
+            'manage roles',
+            'manage permissions',
+            'manage customers',
+            'manage products',
+            'manage purchases',
+            'manage installments',
+            'manage guarantors',
+            
+            // General permissions
+            'view dashboard',
             'view reports',
-            'general settings',
-            'profile settings',
-            'customer dashboard',
-            'delete account'
+            'view settings',
+            'view profile',
+            'edit profile',
+            
+            // Customer permissions
+            'view own purchases',
+            'view own payments',
         ];
 
         // Create permissions
@@ -38,9 +51,24 @@ class RolesAndPermissionsSeeder extends Seeder
             'Admin' => [
                 'manage users',
                 'manage roles',
-                'general dashboard',
+                'manage permissions',
+                'manage customers',
+                'manage products',
+                'manage purchases',
+                'manage installments',
+                'manage guarantors',
+                'view dashboard',
                 'view reports',
-                'delete account'
+                'view settings',
+                'view profile',
+                'edit profile',
+            ],
+            'Customer' => [
+                'view dashboard',
+                'view own purchases',
+                'view own payments',
+                'view profile',
+                'edit profile',
             ]
         ];
 
@@ -48,16 +76,5 @@ class RolesAndPermissionsSeeder extends Seeder
             $role = Role::firstOrCreate(['name' => $roleName]);
             $role->syncPermissions($rolePermissions);
         }
-
-        // Optionally: Assign roles to specific users (if users exist in the database)
-        $adminUser = \App\Models\User::find(1); // Replace 1 with the actual Admin user ID
-        if ($adminUser) {
-            $adminUser->assignRole('Admin');
-        }
-
-        // $customerUser = \App\Models\User::find(2); // Replace 2 with the actual Customer user ID
-        // if ($customerUser) {
-        //     $customerUser->assignRole('Customer');
-        // }
     }
 }

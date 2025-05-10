@@ -9,27 +9,43 @@ use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
-    
     public function run(): void
     {
-        // Create roles if not already created
-        $roles = ['Admin'];
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
-        }
-
         // Create Admin User
         $admin = User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
-            ['name' => 'Admin User', 'password' => bcrypt('root')]
+            [
+                'name' => 'Admin User', 
+                'password' => bcrypt('admin123')
+            ]
         );
         $admin->assignRole('Admin');
 
         // Create Customer User
-        // $customer = User::firstOrCreate(
-        //     ['email' => 'customer@gmail.com'],
-        //     ['name' => 'Customer User', 'password' => bcrypt('root')]
-        // );
-        // $customer->assignRole('Customer');
+        $customer = User::firstOrCreate(
+            ['email' => 'customer@gmail.com'],
+            [
+                'name' => 'John Doe', 
+                'password' => bcrypt('customer123')
+            ]
+        );
+        $customer->assignRole('Customer');
+
+        // Create more test customers
+        $customers = [
+            ['email' => 'customer2@gmail.com', 'name' => 'Jane Smith'],
+            ['email' => 'customer3@gmail.com', 'name' => 'Michael Johnson'],
+        ];
+
+        foreach ($customers as $customerData) {
+            $user = User::firstOrCreate(
+                ['email' => $customerData['email']],
+                [
+                    'name' => $customerData['name'],
+                    'password' => bcrypt('password123')
+                ]
+            );
+            $user->assignRole('Customer');
+        }
     }
 }

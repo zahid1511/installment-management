@@ -34,13 +34,13 @@ class Customer extends Model
         return $this->hasMany(Guarantor::class);
     }
 
-    public function products()
-    {
-        return $this->hasMany(Product::class);
-    }
-
     public function installments()
     {
         return $this->hasMany(Installment::class);
+    }
+    
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
     }
 }

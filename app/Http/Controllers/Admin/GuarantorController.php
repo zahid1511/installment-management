@@ -11,7 +11,7 @@ class GuarantorController extends Controller
 {
     public function index()
     {
-        $guarantors = Guarantor::with('customer')->get();
+        $guarantors = Guarantor::with('customer')->orderBy('customer_id')->orderBy('guarantor_no')->get();
         return view('guarantors.index', compact('guarantors'));
     }
 
@@ -23,28 +23,37 @@ class GuarantorController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'name' => 'required',
-            'father_name' => 'required',
-            'relation' => 'required',
-            'nic' => 'required',
-            'phone' => 'required',
-            'residence_address' => 'required',
+            'name' => 'required|string|max:255',
+            'father_name' => 'required|string|max:255',
+            'relation' => 'required|string|max:255',
+            'nic' => 'required|string|unique:guarantors,nic|max:20',
+            'phone' => 'required|string|max:20',
+            'residence_address' => 'required|string',
+            'office_address' => 'nullable|string',
+            'occupation' => 'nullable|string|max:255',
             'guarantor_no' => 'required|in:1,2',
         ]);
 
+        // Check if guarantor number already exists for this customer
+        $existingGuarantor = Guarantor::where('customer_id', $request->customer_id)
+                                     ->where('guarantor_no', $request->guarantor_no)
+                                     ->first();
+
+        if ($existingGuarantor) {
+            return back()->withErrors(['guarantor_no' => 'Guarantor number ' . $request->guarantor_no . ' already exists for this customer.'])
+                         ->withInput();
+        }
+
         Guarantor::create($request->all());
-        // logger($guarantor); // Writes to storage/logs/laravel.log
         return redirect()->route('guarantors.index')->with('success', 'Guarantor added successfully');
     }
 
     public function show(Guarantor $guarantor)
-{
-    return view('guarantors.index', compact('guarantor'));
-}
-
+    {
+        return view('guarantors.show', compact('guarantor'));
+    }
 
     public function edit(Guarantor $guarantor)
     {
@@ -56,14 +65,27 @@ class GuarantorController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'name' => 'required',
-            'father_name' => 'required',
-            'relation' => 'required',
-            'nic' => 'required',
-            'phone' => 'required',
-            'residence_address' => 'required',
+            'name' => 'required|string|max:255',
+            'father_name' => 'required|string|max:255',
+            'relation' => 'required|string|max:255',
+            'nic' => 'required|string|max:20|unique:guarantors,nic,' . $guarantor->id,
+            'phone' => 'required|string|max:20',
+            'residence_address' => 'required|string',
+            'office_address' => 'nullable|string',
+            'occupation' => 'nullable|string|max:255',
             'guarantor_no' => 'required|in:1,2',
         ]);
+
+        // Check if guarantor number already exists for this customer (excluding current record)
+        $existingGuarantor = Guarantor::where('customer_id', $request->customer_id)
+                                     ->where('guarantor_no', $request->guarantor_no)
+                                     ->where('id', '!=', $guarantor->id)
+                                     ->first();
+
+        if ($existingGuarantor) {
+            return back()->withErrors(['guarantor_no' => 'Guarantor number ' . $request->guarantor_no . ' already exists for this customer.'])
+                         ->withInput();
+        }
 
         $guarantor->update($request->all());
         return redirect()->route('guarantors.index')->with('success', 'Guarantor updated successfully');
@@ -73,5 +95,23 @@ class GuarantorController extends Controller
     {
         $guarantor->delete();
         return redirect()->route('guarantors.index')->with('success', 'Guarantor deleted successfully');
+    }
+    
+    public function checkGuarantor(Request $request)
+    {
+        $customerId = $request->customer_id;
+        $guarantorNo = $request->guarantor_no;
+        $excludeId = $request->exclude_id;
+        
+        $query = Guarantor::where('customer_id', $customerId)
+                          ->where('guarantor_no', $guarantorNo);
+        
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json(['exists' => $exists]);
     }
 }
