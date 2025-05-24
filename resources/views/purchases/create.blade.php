@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h1 class="mb-4">New Purchase</h1>
 
     <form action="{{ route('purchases.store') }}" method="POST">
@@ -109,10 +109,10 @@ $(document).ready(function() {
         const totalPrice = parseFloat($('#total_price').val()) || 0;
         const advance = parseFloat($('#advance_payment').val()) || 0;
         const months = parseInt($('#installment_months').val()) || 1;
-        
+
         const remaining = totalPrice - advance;
         const monthly = remaining / months;
-        
+
         $('#monthly_installment').val(monthly.toFixed(2));
     }
 });

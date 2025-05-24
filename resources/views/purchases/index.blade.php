@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Purchases</h1>
         <a href="{{ route('purchases.create') }}" class="btn btn-primary">New Purchase</a>

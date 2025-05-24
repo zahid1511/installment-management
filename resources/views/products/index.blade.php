@@ -2,7 +2,7 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h1 class="mb-4">Products</h1>
 
     <a href="{{ route('products.create') }}" class="btn btn-primary mb-3">Add New Product</a>

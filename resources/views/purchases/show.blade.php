@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Purchase Details</h1>
         <a href="{{ route('purchases.index') }}" class="btn btn-default">Back to List</a>
@@ -127,7 +127,7 @@
                             <td>{{ $installment->officer?->name ?? $installment->recovery_officer ?? '-' }}</td>
                             <td>
                                 @if($installment->status == 'pending')
-                                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#paymentModal" 
+                                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#paymentModal"
                                         data-installment-id="{{ $installment->id }}"
                                         data-due-date="{{ $installment->due_date->format('Y-m-d') }}"
                                         data-amount="{{ $installment->installment_amount }}">
@@ -160,27 +160,27 @@ $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="installment_id" id="installment_id">
-                    
+
                     <div class="form-group">
                         <label>Payment Date</label>
                         <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Receipt No</label>
                         <input type="text" class="form-control" name="receipt_no" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Payment Amount</label>
                         <input type="number" class="form-control" name="payment_amount" id="payment_amount" step="0.01" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Discount (if any)</label>
                         <input type="number" class="form-control" name="discount" step="0.01" min="0">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Payment Method</label>
                         <select class="form-control" name="payment_method" required>
@@ -189,7 +189,7 @@ $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
                             <option value="cheque">Cheque</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Recovery Officer</label>
                         <select class="form-control" name="recovery_officer_id" required>
@@ -199,7 +199,7 @@ $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Remarks</label>
                         <textarea class="form-control" name="remarks"></textarea>
@@ -220,7 +220,7 @@ $('#paymentModal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
     var installmentId = button.data('installment-id');
     var amount = button.data('amount');
-    
+
     var modal = $(this);
     modal.find('#installment_id').val(installmentId);
     modal.find('#payment_amount').val(amount);

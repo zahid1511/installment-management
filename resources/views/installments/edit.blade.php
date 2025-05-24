@@ -2,7 +2,7 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h1 class="mb-4">Edit Installment</h1>
 
     <form action="{{ route('installments.update', $installment->id) }}" method="POST">

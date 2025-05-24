@@ -1,13 +1,22 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h1 class="mb-4">Edit Customer</h1>
 
-    <form action="{{ route('customers.update', $customer->id) }}" method="POST">
+        <form action="{{ route('customers.update', $customer->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
-
+        @if ($customer->image)
+            <div class="mb-3">
+                <label>Current Image</label><br>
+                <img src="{{ asset('backend/img/customers/' . $customer->image) }}" alt="Customer Image" width="120" height="120" style="object-fit: cover; border-radius: 8px;">
+            </div>
+        @endif
+        <div class="form-group mt-3">
+            <label for="image">Upload New Image</label>
+            <input type="file" class="form-control" name="image" id="image" accept="image/*">
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <label for="account_no">Account No <span class="text-danger">*</span></label>

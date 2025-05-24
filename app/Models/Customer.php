@@ -26,6 +26,7 @@ class Customer extends Model
         'installments',
         'advance',
         'balance',
+        'image',
         'is_defaulter',
     ];
 

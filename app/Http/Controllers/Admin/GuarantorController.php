@@ -11,7 +11,7 @@ class GuarantorController extends Controller
 {
     public function index()
     {
-        $guarantors = Guarantor::with('customer')->orderBy('customer_id')->orderBy('guarantor_no')->get();
+        $guarantors = Guarantor::with('customer')->orderBy('customer_id')->orderBy('guarantor_no')->paginate(6);
         return view('guarantors.index', compact('guarantors'));
     }
 
@@ -36,29 +36,27 @@ class GuarantorController extends Controller
             'guarantor_no' => 'required|in:1,2',
         ]);
 
-        // Check if guarantor number already exists for this customer
-        $existingGuarantor = Guarantor::where('customer_id', $request->customer_id)
-                                     ->where('guarantor_no', $request->guarantor_no)
-                                     ->first();
+        $data = $request->all();
 
-        if ($existingGuarantor) {
-            return back()->withErrors(['guarantor_no' => 'Guarantor number ' . $request->guarantor_no . ' already exists for this customer.'])
-                         ->withInput();
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('backend/img/guarantors'), $filename);
+            $data['image'] = 'backend/img/guarantors/' . $filename;
         }
 
-        Guarantor::create($request->all());
+        $existingGuarantor = Guarantor::where('customer_id', $data['customer_id'])
+            ->where('guarantor_no', $data['guarantor_no'])
+            ->first();
+
+        if ($existingGuarantor) {
+            return back()->withErrors(['guarantor_no' => 'Guarantor number ' . $data['guarantor_no'] . ' already exists for this customer.'])
+                ->withInput();
+        }
+
+        Guarantor::create($data);
+
         return redirect()->route('guarantors.index')->with('success', 'Guarantor added successfully');
-    }
-
-    public function show(Guarantor $guarantor)
-    {
-        return view('guarantors.show', compact('guarantor'));
-    }
-
-    public function edit(Guarantor $guarantor)
-    {
-        $customers = Customer::all();
-        return view('guarantors.edit', compact('guarantor', 'customers'));
     }
 
     public function update(Request $request, Guarantor $guarantor)
@@ -76,19 +74,44 @@ class GuarantorController extends Controller
             'guarantor_no' => 'required|in:1,2',
         ]);
 
-        // Check if guarantor number already exists for this customer (excluding current record)
-        $existingGuarantor = Guarantor::where('customer_id', $request->customer_id)
-                                     ->where('guarantor_no', $request->guarantor_no)
-                                     ->where('id', '!=', $guarantor->id)
-                                     ->first();
+        $data = $request->all();
 
-        if ($existingGuarantor) {
-            return back()->withErrors(['guarantor_no' => 'Guarantor number ' . $request->guarantor_no . ' already exists for this customer.'])
-                         ->withInput();
+        if ($request->hasFile('image')) {
+            if ($guarantor->image && file_exists(public_path($guarantor->image))) {
+                unlink(public_path($guarantor->image));
+            }
+            $image = $request->file('image');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('backend/img/guarantors'), $filename);
+            $data['image'] = 'backend/img/guarantors/' . $filename;
         }
 
-        $guarantor->update($request->all());
+        // Check if guarantor number already exists for this customer (excluding current record)
+        $existingGuarantor = Guarantor::where('customer_id', $data['customer_id'])
+            ->where('guarantor_no', $data['guarantor_no'])
+            ->where('id', '!=', $guarantor->id)
+            ->first();
+
+        if ($existingGuarantor) {
+            return back()->withErrors(['guarantor_no' => 'Guarantor number ' . $data['guarantor_no'] . ' already exists for this customer.'])
+                ->withInput();
+        }
+
+        $guarantor->update($data);
+
         return redirect()->route('guarantors.index')->with('success', 'Guarantor updated successfully');
+    }
+
+
+    public function show(Guarantor $guarantor)
+    {
+        return view('guarantors.show', compact('guarantor'));
+    }
+
+    public function edit(Guarantor $guarantor)
+    {
+        $customers = Customer::all();
+        return view('guarantors.edit', compact('guarantor', 'customers'));
     }
 
     public function destroy(Guarantor $guarantor)
@@ -96,22 +119,22 @@ class GuarantorController extends Controller
         $guarantor->delete();
         return redirect()->route('guarantors.index')->with('success', 'Guarantor deleted successfully');
     }
-    
+
     public function checkGuarantor(Request $request)
     {
         $customerId = $request->customer_id;
         $guarantorNo = $request->guarantor_no;
         $excludeId = $request->exclude_id;
-        
+
         $query = Guarantor::where('customer_id', $customerId)
-                          ->where('guarantor_no', $guarantorNo);
-        
+            ->where('guarantor_no', $guarantorNo);
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
-        
+
         $exists = $query->exists();
-        
+
         return response()->json(['exists' => $exists]);
     }
 }

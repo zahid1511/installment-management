@@ -28,6 +28,8 @@
     <link href="{{ asset('backend/css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('backend/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('backend/css/plugins/dataTables/datatables.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
     @stack('styles')
 </head>
 
@@ -258,6 +260,9 @@
 
     <!-- Toastr -->
     <script src="{{ asset('backend/js/plugins/toastr/toastr.min.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 
 
     <script>

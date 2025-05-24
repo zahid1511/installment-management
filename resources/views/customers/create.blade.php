@@ -1,10 +1,10 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h1 class="mb-4">Add New Customer</h1>
 
-    <form action="{{ route('customers.store') }}" method="POST">
+    <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="row">
@@ -68,7 +68,7 @@
         </div>
 
         <div class="row mt-3">
-            <div class="col-md-6">
+            <div class="col-md-3">
                 <label for="gender">Gender</label>
                 <select class="form-control" name="gender" id="gender">
                     <option value="">Select</option>
@@ -77,7 +77,13 @@
                 </select>
             </div>
 
-            <div class="col-md-6">
+                <div class="col-md-3">
+                    <label for="image">Customer Image</label>
+                    <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                </div>
+
+
+            <div class="col-md-3">
                 <label for="total_price">Total Price</label>
                 <input type="number" class="form-control" id="total_price" name="total_price">
             </div>

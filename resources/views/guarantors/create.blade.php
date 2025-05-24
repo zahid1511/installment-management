@@ -1,9 +1,9 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h2>Create Guarantor</h2>
-    <form action="{{ route('guarantors.store') }}" method="POST">
+   <form action="{{ route('guarantors.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-3">
@@ -121,7 +121,13 @@
                 <small class="text-danger">{{ $message }}</small>
             @enderror
         </div>
-
+        <div class="mb-3">
+            <label for="image">Guarantor Image</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+            @error('image')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
         <button type="submit" class="btn btn-success">Save</button>
         <a href="{{ route('guarantors.index') }}" class="btn btn-secondary">Cancel</a>
     </form>

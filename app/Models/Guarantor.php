@@ -16,6 +16,7 @@ class Guarantor extends Model
         'relation',
         'nic',
         'phone',
+        'image',
         'residence_address',
         'office_address',
         'occupation',
