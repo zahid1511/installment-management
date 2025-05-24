@@ -46,4 +46,9 @@ class RecoveryOfficer extends Model
             ->where('status', 'paid')
             ->sum('installment_amount');
     }
+    
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }

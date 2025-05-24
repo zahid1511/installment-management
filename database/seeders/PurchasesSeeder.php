@@ -66,9 +66,10 @@ class PurchasesSeeder extends Seeder
             // Calculate balance for this installment
             $newBalance = $remainingBalance - $purchase->monthly_installment;
             if ($i == $purchase->installment_months) {
-                // Last installment might need adjustment
-                $purchase->monthly_installment = $remainingBalance;
+                $installmentAmount = $remainingBalance; // Use local variable
                 $newBalance = 0;
+            } else {
+                $installmentAmount = $purchase->monthly_installment;
             }
             
             $status = 'pending';
@@ -96,7 +97,7 @@ class PurchasesSeeder extends Seeder
                 'due_date' => $dueDate,
                 'receipt_no' => $receiptNo,
                 'pre_balance' => $remainingBalance,
-                'installment_amount' => $purchase->monthly_installment,
+                'installment_amount' => $installmentAmount ,
                 'discount' => 0,
                 'balance' => $newBalance,
                 'fine_amount' => 0,

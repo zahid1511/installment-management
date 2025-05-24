@@ -12,7 +12,9 @@ class CustomerController extends Controller
     // Display all customers
     public function index()
     {
-        $customers = Customer::latest()->paginate(5);
+        $customers = Customer::with(['purchases', 'installments'])
+            ->latest()
+            ->paginate(10);
         return view('customers.index', compact('customers'));
     }
 
@@ -26,30 +28,30 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'account_no' => 'required|string|max:255',
+            'account_no' => 'required|string|max:255|unique:customers,account_no',
             'name' => 'required|string|max:255',
-            'father_name' => 'nullable|string',
-            'residential_type' => 'nullable|string',
-            'occupation' => 'nullable|string',
+            'father_name' => 'nullable|string|max:255',
+            'residential_type' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
             'residence' => 'nullable|string',
             'office_address' => 'nullable|string',
-            'mobile_1' => 'required|string',
-            'mobile_2' => 'nullable|string',
-            'nic' => 'required|string',
-            'gender' => 'nullable|string',
-            'total_price' => 'nullable|numeric',
-            'installment_amount' => 'nullable|numeric',
-            'installments' => 'nullable|numeric',
-            'advance' => 'nullable|numeric',
-            'balance' => 'nullable|numeric',
-            'is_defaulter' => 'nullable|boolean',
+            'mobile_1' => 'required|string|max:20',
+            'mobile_2' => 'nullable|string|max:20',
+            'nic' => 'required|string|max:20|unique:customers,nic',
+            'gender' => 'nullable|in:male,female',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Handle image upload
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $imageName = time() . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('backend/img/customers'), $imageName);
             $validated['image'] = $imageName;
         }
+
+        // Set default defaulter status
+        $validated['is_defaulter'] = false;
 
         Customer::create($validated);
 
@@ -66,26 +68,23 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'account_no' => 'required|string|max:255',
+            'account_no' => 'required|string|max:255|unique:customers,account_no,' . $customer->id,
             'name' => 'required|string|max:255',
-            'father_name' => 'nullable|string',
-            'residential_type' => 'nullable|string',
-            'occupation' => 'nullable|string',
+            'father_name' => 'nullable|string|max:255',
+            'residential_type' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
             'residence' => 'nullable|string',
             'office_address' => 'nullable|string',
-            'mobile_1' => 'required|string',
-            'mobile_2' => 'nullable|string',
-            'nic' => 'required|string',
-            'gender' => 'nullable|string',
-            'total_price' => 'nullable|numeric',
-            'installment_amount' => 'nullable|numeric',
-            'installments' => 'nullable|numeric',
-            'advance' => 'nullable|numeric',
-            'balance' => 'nullable|numeric',
-            'is_defaulter' => 'nullable|boolean',
+            'mobile_1' => 'required|string|max:20',
+            'mobile_2' => 'nullable|string|max:20',
+            'nic' => 'required|string|max:20|unique:customers,nic,' . $customer->id,
+            'gender' => 'nullable|in:male,female',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Handle image upload
         if ($request->hasFile('image')) {
-            // delete old image
+            // Delete old image
             if ($customer->image && file_exists(public_path('backend/img/customers/' . $customer->image))) {
                 unlink(public_path('backend/img/customers/' . $customer->image));
             }
@@ -98,12 +97,37 @@ class CustomerController extends Controller
 
         $customer->update($validated);
 
+        // Update defaulter status based on current installments
+        $isDefaulter = $customer->installments()
+            ->where('status', 'pending')
+            ->where('due_date', '<', now())
+            ->exists();
+        
+        $customer->update(['is_defaulter' => $isDefaulter]);
+
         return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
     }
 
     // Delete customer
     public function destroy(Customer $customer)
     {
+        // Check if customer has any purchases
+        if ($customer->purchases()->exists()) {
+            return redirect()->route('customers.index')
+                ->with('error', 'Cannot delete customer with purchase history.');
+        }
+
+        // Check if customer has any guarantors
+        if ($customer->guarantors()->exists()) {
+            return redirect()->route('customers.index')
+                ->with('error', 'Cannot delete customer with guarantors. Remove guarantors first.');
+        }
+
+        // Delete customer image if exists
+        if ($customer->image && file_exists(public_path('backend/img/customers/' . $customer->image))) {
+            unlink(public_path('backend/img/customers/' . $customer->image));
+        }
+
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
     }
@@ -120,5 +144,31 @@ class CustomerController extends Controller
         ]);
 
         return view('customers.statement', compact('customer'));
+    }
+
+    // API method to get customer summary
+    public function getSummary(Customer $customer)
+    {
+        return response()->json($customer->getSummary());
+    }
+
+    // Bulk update defaulter status
+    public function updateDefaulterStatus()
+    {
+        $defaulterIds = Customer::whereHas('installments', function($query) {
+            $query->where('status', 'pending')
+                  ->where('due_date', '<', now());
+        })->pluck('id');
+
+        // Mark defaulters
+        Customer::whereIn('id', $defaulterIds)->update(['is_defaulter' => true]);
+        
+        // Clear non-defaulters
+        Customer::whereNotIn('id', $defaulterIds)->update(['is_defaulter' => false]);
+
+        return response()->json([
+            'message' => 'Defaulter status updated successfully',
+            'defaulters_count' => $defaulterIds->count()
+        ]);
     }
 }

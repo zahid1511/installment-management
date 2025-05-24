@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use App\Models\RecoveryOfficer; // Add this import
 
 class Installment extends Model
 {
@@ -23,7 +24,6 @@ class Installment extends Model
         'fine_amount',
         'fine_type',
         'recovery_officer_id', // Changed from recovery_officer
-        'recovery_officer', // Keep this for backward compatibility
         'status',
         'payment_method',
         'remarks',
@@ -90,4 +90,5 @@ class Installment extends Model
         
         return null;
     }
+
 }

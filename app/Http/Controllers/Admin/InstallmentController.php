@@ -76,7 +76,7 @@ class InstallmentController extends Controller
             'installment_amount' => 'required|numeric',
             'discount' => 'nullable|numeric',
             'balance' => 'required|numeric',
-            'recovery_officer' => 'required',
+            'recovery_officer_id' => 'required|exists:recovery_officers,id',
         ]);
 
         $installment->update($request->all());

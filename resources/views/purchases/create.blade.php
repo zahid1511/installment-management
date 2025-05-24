@@ -67,11 +67,25 @@
             </div>
         </div>
 
+        
+
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="first_installment_date">First Installment Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" name="first_installment_date" id="first_installment_date" required>
+                    <input type="date" class="form-control" name="first_installment_date" id="first_installment_date" value="{{ date('Y-m-d') }}" required>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="recovery_officer_id">Recovery Officer <span class="text-danger">*</span></label>
+                    <select class="form-control" name="recovery_officer_id" id="recovery_officer_id" required>
+                        <option value="">Select Recovery Officer</option>
+                        @foreach($recoveryOfficers as $officer)
+                            <option value="{{ $officer->id }}">{{ $officer->name }} ({{ $officer->employee_id }})</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 

@@ -7,6 +7,7 @@ use App\Models\Purchase;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Installment;
+use App\Models\RecoveryOfficer; // Add this import
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -22,10 +23,12 @@ class PurchaseController extends Controller
     {
         $customers = Customer::all();
         $products = Product::all();
-        return view('purchases.create', compact('customers', 'products'));
+        $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get(); // Add this
+        return view('purchases.create', compact('customers', 'products', 'recoveryOfficers'));
     }
 
-    public function store(Request $request)
+
+     public function store(Request $request)
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
@@ -35,6 +38,7 @@ class PurchaseController extends Controller
             'advance_payment' => 'required|numeric|min:0',
             'installment_months' => 'required|integer|min:1',
             'first_installment_date' => 'required|date|after:purchase_date',
+            'recovery_officer_id' => 'required|exists:recovery_officers,id', // Make it required
         ]);
 
         // Calculate values
@@ -62,18 +66,8 @@ class PurchaseController extends Controller
             'last_installment_date' => $lastInstallmentDate,
         ]);
 
-        // Create installment schedule
-        $this->createInstallmentSchedule($purchase);
-
-        // Update customer record
-        $customer = Customer::find($request->customer_id);
-        $customer->update([
-            'total_price' => $request->total_price,
-            'advance' => $request->advance_payment,
-            'balance' => $remainingBalance,
-            'installment_amount' => $monthlyInstallment,
-            'installments' => $request->installment_months,
-        ]);
+        // Create installment schedule with selected recovery officer
+        $this->createInstallmentSchedule($purchase, $request->recovery_officer_id);
 
         return redirect()->route('purchases.index')->with('success', 'Purchase created successfully');
     }
@@ -86,7 +80,7 @@ class PurchaseController extends Controller
         return view('purchases.show', compact('purchase'));
     }
 
-    private function createInstallmentSchedule(Purchase $purchase)
+private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerId)
     {
         $currentDate = Carbon::parse($purchase->first_installment_date);
         $remainingBalance = $purchase->remaining_balance;
@@ -94,27 +88,31 @@ class PurchaseController extends Controller
         for ($i = 1; $i <= $purchase->installment_months; $i++) {
             $dueDate = $currentDate->copy()->addMonths($i - 1);
             
+            // Use local variable instead of modifying purchase object
+            $installmentAmount = $purchase->monthly_installment;
+            
             // Calculate balance for this installment
-            $newBalance = $remainingBalance - $purchase->monthly_installment;
             if ($i == $purchase->installment_months) {
-                // Last installment might need adjustment
-                $purchase->monthly_installment = $remainingBalance;
+                // Last installment takes remaining balance
+                $installmentAmount = $remainingBalance;
                 $newBalance = 0;
+            } else {
+                $newBalance = $remainingBalance - $installmentAmount;
             }
 
             Installment::create([
                 'customer_id' => $purchase->customer_id,
                 'purchase_id' => $purchase->id,
-                'date' => null, // Will be filled when payment is made
+                'date' => null,
                 'due_date' => $dueDate,
-                'receipt_no' => null, // Will be filled when payment is made
+                'receipt_no' => null,
                 'pre_balance' => $remainingBalance,
-                'installment_amount' => $purchase->monthly_installment,
+                'installment_amount' => $installmentAmount,
                 'discount' => 0,
                 'balance' => $newBalance,
                 'fine_amount' => 0,
                 'status' => 'pending',
-                'recovery_officer' => null, // Will be filled when payment is made
+                'recovery_officer_id' => $recoveryOfficerId, // Use the passed officer ID directly
                 'remarks' => "Installment $i of {$purchase->installment_months}",
             ]);
 
@@ -163,9 +161,13 @@ class PurchaseController extends Controller
         // Update customer defaulter status
         $customer = $purchase->customer;
         $customer->update([
-            'is_defaulter' => $customer->purchases()->where('status', 'active')->get()->some(function($p) {
-                return $p->isDefaulted();
-            })
+            'is_defaulter' => $customer->purchases()
+                ->where('status', 'active')
+                ->get()
+                ->filter(function($p) {
+                    return $p->isDefaulted();
+                })
+                ->isNotEmpty()
         ]);
 
         return redirect()->route('purchases.show', $purchase)

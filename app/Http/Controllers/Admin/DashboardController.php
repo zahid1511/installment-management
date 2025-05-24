@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Installment;
 use Carbon\Carbon;
 use DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {

@@ -26,11 +26,6 @@ class CustomerSeeder extends Seeder
                 'mobile_2' => '03017654321',
                 'nic' => '35404-0076027-7',
                 'gender' => 'male',
-                'total_price' => 44400,
-                'installment_amount' => 3700,
-                'installments' => 11,
-                'advance' => 3700,
-                'balance' => 37000,
                 'is_defaulter' => false,
             ],
             [
@@ -45,11 +40,6 @@ class CustomerSeeder extends Seeder
                 'mobile_2' => null,
                 'nic' => '35202-1234567-1',
                 'gender' => 'male',
-                'total_price' => 55000,
-                'installment_amount' => 4583,
-                'installments' => 12,
-                'advance' => 0,
-                'balance' => 55000,
                 'is_defaulter' => false,
             ],
             [
@@ -64,11 +54,6 @@ class CustomerSeeder extends Seeder
                 'mobile_2' => '03129876543',
                 'nic' => '61101-5432168-6',
                 'gender' => 'female',
-                'total_price' => 35000,
-                'installment_amount' => 3000,
-                'installments' => 10,
-                'advance' => 5000,
-                'balance' => 30000,
                 'is_defaulter' => false,
             ]
         ];

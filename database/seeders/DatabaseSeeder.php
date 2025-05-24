@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
             ProductsSeeder::class,
             GuarantorsSeeder::class,
             RecoveryOfficersSeeder::class,
-            PurchasesSeeder::class,
+            /*PurchasesSeeder::class,*/
         ]);
     }
 }
