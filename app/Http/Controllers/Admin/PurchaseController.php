@@ -30,6 +30,7 @@ class PurchaseController extends Controller
 
      public function store(Request $request)
     {
+        
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'product_id' => 'required|exists:products,id',
@@ -37,10 +38,9 @@ class PurchaseController extends Controller
             'total_price' => 'required|numeric|min:0',
             'advance_payment' => 'required|numeric|min:0',
             'installment_months' => 'required|integer|min:1',
-            'first_installment_date' => 'required|date|after:purchase_date',
-            'recovery_officer_id' => 'required|exists:recovery_officers,id', // Make it required
+            'first_installment_date' => 'required|date|after_or_equal:purchase_date', // Changed this
+            'recovery_officer_id' => 'required|exists:recovery_officers,id',
         ]);
-
         // Calculate values
         $remainingBalance = $request->total_price - $request->advance_payment;
         $monthlyInstallment = Purchase::calculateMonthlyInstallment(

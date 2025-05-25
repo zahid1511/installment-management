@@ -73,7 +73,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="first_installment_date">First Installment Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" name="first_installment_date" id="first_installment_date" value="{{ date('Y-m-d') }}" required>
+                    <input type="date" class="form-control" name="first_installment_date" id="first_installment_date" value="" required>
                 </div>
             </div>
 
