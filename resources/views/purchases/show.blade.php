@@ -127,10 +127,8 @@
                             <td>{{ $installment->officer?->name ?? $installment->recovery_officer ?? '-' }}</td>
                             <td>
                                 @if($installment->status == 'pending')
-                                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#paymentModal"
-                                        data-installment-id="{{ $installment->id }}"
-                                        data-due-date="{{ $installment->due_date->format('Y-m-d') }}"
-                                        data-amount="{{ $installment->installment_amount }}">
+                                    <button class="btn btn-sm btn-primary process-payment-btn" 
+                                        data-installment-id="{{ $installment->id }}">
                                         Process Payment
                                     </button>
                                 @endif
@@ -143,10 +141,6 @@
         </div>
     </div>
 </div>
-
-@php
-$activeOfficers = \App\Models\RecoveryOfficer::active()->get();
-@endphp
 
 <!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" role="dialog">
@@ -162,27 +156,30 @@ $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
                     <input type="hidden" name="installment_id" id="installment_id">
 
                     <div class="form-group">
-                        <label>Payment Date</label>
+                        <label>Payment Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Receipt No</label>
-                        <input type="text" class="form-control" name="receipt_no" required>
+                        <label>Receipt No <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="receipt_no" id="receipt_no" readonly required style="background-color: #f5f5f5;">
+                        <small class="text-muted">Auto-generated receipt number</small>
                     </div>
 
                     <div class="form-group">
-                        <label>Payment Amount</label>
+                        <label>Payment Amount <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="payment_amount" id="payment_amount" step="0.01" required>
+                        <small class="text-muted">Pre-filled with scheduled installment amount</small>
                     </div>
 
                     <div class="form-group">
-                        <label>Discount (if any)</label>
-                        <input type="number" class="form-control" name="discount" step="0.01" min="0">
+                        <label>Discount</label>
+                        <input type="number" class="form-control" name="discount" value="0" step="0.01" min="0">
+                        <small class="text-muted">Enter discount amount if applicable</small>
                     </div>
 
                     <div class="form-group">
-                        <label>Payment Method</label>
+                        <label>Payment Method <span class="text-danger">*</span></label>
                         <select class="form-control" name="payment_method" required>
                             <option value="cash">Cash</option>
                             <option value="bank">Bank Transfer</option>
@@ -191,18 +188,17 @@ $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
                     </div>
 
                     <div class="form-group">
-                        <label>Recovery Officer</label>
-                        <select class="form-control" name="recovery_officer_id" required>
-                            <option value="">Select Recovery Officer</option>
-                            @foreach($activeOfficers as $officer)
-                                <option value="{{ $officer->id }}">{{ $officer->name }} ({{ $officer->employee_id }})</option>
-                            @endforeach
+                        <label>Recovery Officer <span class="text-danger">*</span></label>
+                        <select class="form-control" name="recovery_officer_id" id="recovery_officer_id" required>
+                            <option value="">Loading...</option>
                         </select>
+                        <small class="text-muted">Pre-selected officer assigned to this installment</small>
                     </div>
 
                     <div class="form-group">
                         <label>Remarks</label>
-                        <textarea class="form-control" name="remarks"></textarea>
+                        <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
+                        <small class="text-muted">Auto-generated default remarks</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -216,14 +212,74 @@ $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
 
 @push('script')
 <script>
-$('#paymentModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget);
-    var installmentId = button.data('installment-id');
-    var amount = button.data('amount');
-
-    var modal = $(this);
-    modal.find('#installment_id').val(installmentId);
-    modal.find('#payment_amount').val(amount);
+$(document).ready(function() {
+    // Handle process payment button click
+    $('.process-payment-btn').on('click', function() {
+        var installmentId = $(this).data('installment-id');
+        
+        // Show loading state
+        $('#paymentModal').modal('show');
+        $('#receipt_no').val('Loading...');
+        $('#payment_amount').val('Loading...');
+        $('#recovery_officer_id').html('<option value="">Loading...</option>');
+        $('#remarks').val('Loading...');
+        
+        // Fetch installment details
+        $.ajax({
+            url: '{{ url("admin/purchases/installment") }}/' + installmentId + '/details',
+            type: 'GET',
+            success: function(response) {
+                // Populate modal with fetched data
+                $('#installment_id').val(installmentId);
+                $('#receipt_no').val(response.receipt_no);
+                $('#payment_amount').val(response.installment_amount);
+                $('#remarks').val(response.remarks);
+                
+                // Populate recovery officers dropdown
+                populateRecoveryOfficers(response.recovery_officer_id);
+            },
+            error: function(xhr) {
+                alert('Error loading installment details. Please try again.');
+                $('#paymentModal').modal('hide');
+            }
+        });
+    });
+    
+    function populateRecoveryOfficers(selectedOfficerId) {
+        $.ajax({
+            url: '{{ route("recovery-officers.index") }}', // We'll need to create an API endpoint
+            type: 'GET',
+            success: function(officers) {
+                var options = '<option value="">Select Recovery Officer</option>';
+                
+                // If we have officers data, populate the dropdown
+                // For now, let's use the selected officer and populate from the existing data
+                @php
+                $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
+                @endphp
+                
+                var officersData = @json($activeOfficers);
+                
+                $.each(officersData, function(index, officer) {
+                    var selected = (officer.id == selectedOfficerId) ? 'selected' : '';
+                    options += '<option value="' + officer.id + '" ' + selected + '>' + 
+                              officer.name + ' (' + officer.employee_id + ')</option>';
+                });
+                
+                $('#recovery_officer_id').html(options);
+            },
+            error: function() {
+                // Fallback: populate with existing data
+                var options = '<option value="">Select Recovery Officer</option>';
+                @foreach(\App\Models\RecoveryOfficer::active()->get() as $officer)
+                var selected = ({{ $officer->id }} == selectedOfficerId) ? 'selected' : '';
+                options += '<option value="{{ $officer->id }}" ' + selected + '>{{ $officer->name }} ({{ $officer->employee_id }})</option>';
+                @endforeach
+                
+                $('#recovery_officer_id').html(options);
+            }
+        });
+    }
 });
 </script>
 @endpush

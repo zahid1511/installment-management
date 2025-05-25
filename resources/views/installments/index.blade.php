@@ -1,175 +1,229 @@
-<!-- resources/views/installments/index.blade.php -->
 @extends('layouts.master')
 
 @section('content')
-    <div class="container-fluid">
-        <h1 class="mb-4">Installments</h1>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Installments Management</h1>
+        <div class="btn-group">
+            <a href="{{ route('purchases.index') }}" class="btn btn-primary">
+                <i class="fa fa-shopping-cart"></i> View Purchases
+            </a>
+        </div>
+    </div>
 
-        <a href="{{ route('installments.create') }}" class="btn btn-primary mb-3">Add New Installment</a>
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Customer</th>
-                    <th>Receipt No</th>
-                    <th>Installment Amount</th>
-                    <th>Balance</th>
-                    <th>Recovery Officer</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($installments as $installment)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $installment->customer->name }}</td>
-                        <td>{{ $installment->receipt_no }}</td>
-                        <td>{{ $installment->installment_amount }}</td>
-                        <td>{{ $installment->balance }}</td>
-                        <td>{{ $installment->recovery_officer }}</td>
-                        <td>
-                            <a href="{{ route('installments.edit', $installment->id) }}"
-                                class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('installments.destroy', $installment->id) }}" method="POST"
-                                style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-        <div id="wrapper">
-            @if ($installments->hasPages())
-                <ul id="pagination">
-                    @if ($installments->onFirstPage())
-                        <li><span class="disabled">«</span></li>
-                    @else
-                        <li><a href="{{ $installments->previousPageUrl() }}" rel="prev">«</a></li>
-                    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
-                    @foreach ($installments->links()->elements[0] as $page => $url)
-                        @if ($page == $installments->currentPage())
-                            <li><a class="active" href="#">{{ $page }}</a></li>
-                        @else
-                            <li><a href="{{ $url }}">{{ $page }}</a></li>
-                        @endif
-                    @endforeach
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-body text-center">
+                    <h4>{{ $installments->where('status', 'paid')->count() }}</h4>
+                    <p>Paid Installments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-warning">
+                <div class="panel-body text-center">
+                    <h4>{{ $installments->where('status', 'pending')->count() }}</h4>
+                    <p>Pending Installments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-danger">
+                <div class="panel-body text-center">
+                    <h4>{{ $installments->where('status', 'pending')->where('due_date', '<', now())->count() }}</h4>
+                    <p>Overdue Installments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-success">
+                <div class="panel-body text-center">
+                    <h4>Rs. {{ number_format($installments->where('status', 'paid')->sum('installment_amount'), 2) }}</h4>
+                    <p>Total Collected</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    @if ($installments->hasMorePages())
-                        <li><a href="{{ $installments->nextPageUrl() }}" rel="next">»</a></li>
-                    @else
-                        <li><span class="disabled">»</span></li>
-                    @endif
-                </ul>
+    <!-- Filters -->
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <form method="GET" action="{{ route('installments.index') }}" class="form-inline">
+                <div class="form-group mr-3">
+                    <label for="status">Status:</label>
+                    <select name="status" id="status" class="form-control ml-2">
+                        <option value="">All Status</option>
+                        <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label for="customer">Customer:</label>
+                    <select name="customer_id" id="customer" class="form-control ml-2">
+                        <option value="">All Customers</option>
+                        @foreach(\App\Models\Customer::orderBy('name')->get() as $customer)
+                            <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                {{ $customer->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ route('installments.index') }}" class="btn btn-default ml-2">Clear</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Installments Table -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">All Installments</h3>
+        </div>
+        <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered" id="installmentsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Customer</th>
+                            <th>Purchase Info</th>
+                            <th>Due Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Payment Date</th>
+                            <th>Receipt No</th>
+                            <th>Recovery Officer</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($installments as $installment)
+                        @php
+                            $isOverdue = ($installment->status == 'pending' && $installment->due_date < now());
+                            $statusClass = $installment->status == 'paid' ? 'success' : ($isOverdue ? 'danger' : 'warning');
+                        @endphp
+                        <tr class="{{ $isOverdue ? 'danger' : '' }}">
+                            <td>{{ $loop->iteration + ($installments->currentPage() - 1) * $installments->perPage() }}</td>
+                            <td>
+                                <strong>{{ $installment->customer->name }}</strong><br>
+                                <small class="text-muted">{{ $installment->customer->account_no }}</small>
+                            </td>
+                            <td>
+                                @if($installment->purchase)
+                                    <strong>{{ $installment->purchase->product->company }} {{ $installment->purchase->product->model }}</strong><br>
+                                    <small class="text-muted">Purchase Date: {{ $installment->purchase->purchase_date->format('d/m/Y') }}</small>
+                                @else
+                                    <span class="text-muted">Manual Entry</span>
+                                @endif
+                            </td>
+                            <td>
+                                {{ $installment->due_date ? $installment->due_date->format('d/m/Y') : '-' }}
+                                @if($isOverdue)
+                                    <br><small class="text-danger">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                        {{ $installment->due_date->diffForHumans() }}
+                                    </small>
+                                @endif
+                            </td>
+                            <td>Rs. {{ number_format($installment->installment_amount, 2) }}</td>
+                            <td>
+                                <span class="label label-{{ $statusClass }}">
+                                    {{ ucfirst($installment->status) }}
+                                    @if($isOverdue) (Overdue) @endif
+                                </span>
+                            </td>
+                            <td>{{ $installment->date ? $installment->date->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $installment->receipt_no ?? '-' }}</td>
+                            <td>{{ $installment->officer?->name ?? $installment->recovery_officer ?? '-' }}</td>
+                            <td>
+                                @if($installment->purchase_id)
+                                    <!-- For purchase-based installments, redirect to purchase page -->
+                                    <a href="{{ route('purchases.show', $installment->purchase_id) }}" 
+                                       class="btn btn-sm btn-info" title="View Purchase Details">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                    @if($installment->status == 'pending')
+                                        <a href="{{ route('purchases.show', $installment->purchase_id) }}#installment-{{ $installment->id }}" 
+                                           class="btn btn-sm btn-success" title="Process Payment">
+                                            <i class="fa fa-credit-card"></i>
+                                        </a>
+                                    @endif
+                                @else
+                                    <!-- For manual installments, allow edit/delete -->
+                                    <a href="{{ route('installments.edit', $installment->id) }}" 
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('installments.destroy', $installment->id) }}" 
+                                          method="POST" style="display: inline-block;" 
+                                          onsubmit="return confirm('Are you sure you want to delete this installment?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if($installments->hasPages())
+                <div class="text-center">
+                    {{ $installments->appends(request()->query())->links() }}
+                </div>
             @endif
         </div>
-    @endsection
-    <style>
-        #wrapper {
-            margin: 0 auto;
-            display: block;
-            width: 960px;
-        }
+    </div>
+</div>
 
-        .page-header {
-            text-align: center;
-            font-size: 1.5em;
-            font-weight: normal;
-            border-bottom: 1px solid #ddd;
-            margin: 30px 0
-        }
-
-        #pagination {
-            margin: 0;
-            padding: 0;
-            text-align: center
-        }
-
-        #pagination li {
-            display: inline
-        }
-
-        #pagination li a {
-            display: inline-block;
-            text-decoration: none;
-            padding: 5px 10px;
-            color: #000
-        }
-
-        /* Active and Hoverable Pagination */
-        #pagination li a {
-            border-radius: 5px;
-            -webkit-transition: background-color 0.3s;
-            transition: background-color 0.3s
-        }
-
-        #pagination li a.active {
-            background-color: #4caf50;
-            color: #fff
-        }
-
-        #pagination li a:hover:not(.active) {
-            background-color: #ddd;
-        }
-
-        /* border-pagination */
-        .b-pagination-outer {
-            width: 100%;
-            margin: 0 auto;
-            text-align: center;
-            overflow: hidden;
-            display: flex
-        }
-
-        #border-pagination {
-            margin: 0 auto;
-            padding: 0;
-            text-align: center
-        }
-
-        #border-pagination li {
-            display: inline;
-
-        }
-
-        #border-pagination li a {
-            display: block;
-            text-decoration: none;
-            color: #000;
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            float: left;
-
-        }
-
-        #border-pagination li a {
-            -webkit-transition: background-color 0.4s;
-            transition: background-color 0.4s
-        }
-
-        #border-pagination li a.active {
-            background-color: #4caf50;
-            color: #fff;
-        }
-
-        #border-pagination li a:hover:not(.active) {
-            background: #ddd;
-        }
-    </style>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('.table').DataTable({
-                paging: false,
-                info: false,
-                ordering: true,
-                searching: true,
-                responsive: true
-            });
-        });
-    </script>
+@push('script')
+<script>
+$(document).ready(function() {
+    $('#installmentsTable').DataTable({
+        paging: false,
+        info: false,
+        ordering: true,
+        searching: true,
+        responsive: true,
+        order: [[3, 'asc']], // Sort by due date column (index 3)
+        columnDefs: [
+            { targets: [9], orderable: false }, // Disable sorting for Actions column
+            { 
+                targets: [3], // Due date column
+                type: 'date',
+                render: function(data, type, row) {
+                    if (type === 'sort' || type === 'type') {
+                        // Convert DD/MM/YYYY to YYYY-MM-DD for proper sorting
+                        if (data && data !== '-') {
+                            var parts = data.split('/');
+                            if (parts.length === 3) {
+                                return parts[2] + '-' + parts[1] + '-' + parts[0];
+                            }
+                        }
+                        return data;
+                    }
+                    return data;
+                }
+            }
+        ]
+    });
+});
+</script>
+@endpush
+@endsection

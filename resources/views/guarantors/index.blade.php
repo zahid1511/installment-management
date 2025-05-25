@@ -34,18 +34,25 @@
                     <tbody>
                         @forelse($guarantors as $guarantor)
                             <tr>
-                                <td>
-                                    @if ($guarantor->image)
-                                        <img src="{{ asset($guarantor->image) }}" alt="Guarantor Image" width="100">
-                                    @endif
-                                </td>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
-                                    <strong>{{ $guarantor->customer->name }}</strong>
+                                    @if ($guarantor->image)
+                                        <img src="{{ asset($guarantor->image) }}" alt="Guarantor Image" 
+                                             width="50" height="50" class="rounded-circle object-fit-cover">
+                                    @else
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px; font-size: 14px;">
+                                            {{ strtoupper(substr($guarantor->name, 0, 2)) }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <strong>{{ $guarantor->customer->name }}</strong><br>
+                                    <small class="text-muted">{{ $guarantor->customer->account_no }}</small>
                                 </td>
                                 <td>{{ $guarantor->name }}</td>
                                 <td>{{ $guarantor->father_name }}</td>
-                                <td>{{ $guarantor->nic }}</td>
+                                <td><code>{{ $guarantor->nic }}</code></td>
                                 <td>{{ $guarantor->phone }}</td>
                                 <td>{{ $guarantor->relation }}</td>
                                 <td>
@@ -56,151 +63,72 @@
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('guarantors.show', $guarantor->id) }}"
-                                            class="btn btn-sm btn-info">View</a>
+                                            class="btn btn-sm btn-info" title="View Details">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
                                         <a href="{{ route('guarantors.edit', $guarantor->id) }}"
-                                            class="btn btn-sm btn-warning">Edit</a>
+                                            class="btn btn-sm btn-warning" title="Edit">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
                                         <form action="{{ route('guarantors.destroy', $guarantor->id) }}" method="POST"
                                             class="d-inline"
                                             onsubmit="return confirm('Are you sure you want to delete this guarantor?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-sm btn-danger">Delete</button>
+                                            <button class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4">
+                                <td colspan="10" class="text-center py-4">
                                     <p class="text-muted">No guarantors found.</p>
-                                    <a href="{{ route('guarantors.create') }}" class="btn btn-primary btn-sm">Add First
-                                        Guarantor</a>
+                                    <a href="{{ route('guarantors.create') }}" class="btn btn-primary btn-sm">Add First Guarantor</a>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
-                <div id="wrapper">
-                    @if ($guarantors->hasPages())
-                        <ul id="pagination">
-                            @if ($guarantors->onFirstPage())
-                                <li><span class="disabled">«</span></li>
-                            @else
-                                <li><a href="{{ $guarantors->previousPageUrl() }}" rel="prev">«</a></li>
-                            @endif
-
-                            @foreach ($guarantors->links()->elements[0] as $page => $url)
-                                @if ($page == $guarantors->currentPage())
-                                    <li><a class="active" href="#">{{ $page }}</a></li>
-                                @else
-                                    <li><a href="{{ $url }}">{{ $page }}</a></li>
-                                @endif
-                            @endforeach
-
-                            @if ($guarantors->hasMorePages())
-                                <li><a href="{{ $guarantors->nextPageUrl() }}" rel="next">»</a></li>
-                            @else
-                                <li><span class="disabled">»</span></li>
-                            @endif
-                        </ul>
-                    @endif
-                </div>
+                
+                <!-- Pagination -->
+                @if ($guarantors->hasPages())
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $guarantors->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 @endsection
+
+@push('styles')
 <style>
-    #wrapper {
-        margin: 0 auto;
-        display: block;
-        width: 960px;
-    }
+.object-fit-cover {
+    object-fit: cover;
+}
 
-    .page-header {
-        text-align: center;
-        font-size: 1.5em;
-        font-weight: normal;
-        border-bottom: 1px solid #ddd;
-        margin: 30px 0
-    }
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
 
-    #pagination {
-        margin: 0;
-        padding: 0;
-        text-align: center
-    }
+.btn-group .btn {
+    margin-right: 2px;
+}
 
-    #pagination li {
-        display: inline
-    }
-
-    #pagination li a {
-        display: inline-block;
-        text-decoration: none;
-        padding: 5px 10px;
-        color: #000
-    }
-
-    /* Active and Hoverable Pagination */
-    #pagination li a {
-        border-radius: 5px;
-        -webkit-transition: background-color 0.3s;
-        transition: background-color 0.3s
-    }
-
-    #pagination li a.active {
-        background-color: #4caf50;
-        color: #fff
-    }
-
-    #pagination li a:hover:not(.active) {
-        background-color: #ddd;
-    }
-
-    /* border-pagination */
-    .b-pagination-outer {
-        width: 100%;
-        margin: 0 auto;
-        text-align: center;
-        overflow: hidden;
-        display: flex
-    }
-
-    #border-pagination {
-        margin: 0 auto;
-        padding: 0;
-        text-align: center
-    }
-
-    #border-pagination li {
-        display: inline;
-
-    }
-
-    #border-pagination li a {
-        display: block;
-        text-decoration: none;
-        color: #000;
-        padding: 5px 10px;
-        border: 1px solid #ddd;
-        float: left;
-
-    }
-
-    #border-pagination li a {
-        -webkit-transition: background-color 0.4s;
-        transition: background-color 0.4s
-    }
-
-    #border-pagination li a.active {
-        background-color: #4caf50;
-        color: #fff;
-    }
-
-    #border-pagination li a:hover:not(.active) {
-        background: #ddd;
-    }
+code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
 </style>
+@endpush
+
+@push('script')
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
@@ -210,7 +138,11 @@
             info: false,
             ordering: true,
             searching: true,
-            responsive: true
+            responsive: true,
+            columnDefs: [
+                { orderable: false, targets: [1, -1] } // Disable sorting on image and actions columns
+            ]
         });
     });
 </script>
+@endpush

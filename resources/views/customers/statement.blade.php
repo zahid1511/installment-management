@@ -5,11 +5,13 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="ibox">
-                <div class="ibox-title">
+                <div class="ibox-title no-print">
                     <h5>Customer Statement</h5>
                     <div class="ibox-tools">
                         <a href="{{ route('customers.index') }}" class="btn btn-sm btn-primary">Back to Customers</a>
-                        <button class="btn btn-sm btn-info" onclick="window.print()">Print</button>
+                        <button class="btn btn-sm btn-info" onclick="window.print()">
+                            <i class="fa fa-print"></i> Print
+                        </button>
                         @if($customer->purchases->count() > 0)
                             <a href="{{ route('purchases.create') }}?customer={{ $customer->id }}" class="btn btn-sm btn-success">New Purchase</a>
                         @endif
@@ -39,17 +41,31 @@
                         }
                     @endphp
                     
-                    <!-- Customer Info Header -->
+                    <!-- Customer Info Header with Image -->
                     <div class="row">
-                        <div class="col-sm-6">
+                        <div class="col-sm-2 text-center">
+                            <!-- Customer Image -->
+                            <div class="customer-photo-container">
+                                @if($customer->image)
+                                    <img src="{{ asset('backend/img/customers/' . $customer->image) }}" 
+                                         alt="Customer Photo" class="customer-photo">
+                                @else
+                                    <div class="customer-photo-placeholder">
+                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
+                                    </div>
+                                @endif
+                                <div class="customer-photo-label">Customer Photo</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
                             <h4>Customer Information</h4>
                             <address>
                                 <strong>{{ $customer->name }}</strong><br>
-                                Account No: {{ $customer->account_no }}<br>
+                                Account No: <code>{{ $customer->account_no }}</code><br>
                                 @if($customer->father_name)
                                     Father Name: {{ $customer->father_name }}<br>
                                 @endif
-                                NIC: {{ $customer->nic }}<br>
+                                NIC: <code>{{ $customer->nic }}</code><br>
                                 Phone: {{ $customer->mobile_1 }}
                                 @if($customer->mobile_2)
                                     , {{ $customer->mobile_2 }}
@@ -63,7 +79,7 @@
                                 @endif
                             </address>
                         </div>
-                        <div class="col-sm-6 text-right">
+                        <div class="col-sm-5 text-right">
                             <h4>Statement Information</h4>
                             <p><strong>Statement Date:</strong> {{ date('d M Y') }}<br>
                             <strong>Total Purchases:</strong> {{ $totalPurchases }}<br>
@@ -133,7 +149,7 @@
                             <div class="alert alert-info text-center">
                                 <h4>No Purchase History</h4>
                                 <p>This customer has not made any purchases yet.</p>
-                                <a href="{{ route('purchases.create') }}?customer={{ $customer->id }}" class="btn btn-primary">Create First Purchase</a>
+                                <a href="{{ route('purchases.create') }}?customer={{ $customer->id }}" class="btn btn-primary no-print">Create First Purchase</a>
                             </div>
                         </div>
                     </div>
@@ -188,42 +204,54 @@
                     </div>
                     @endif
 
-                    <!-- Guarantors Section -->
+                    <!-- Guarantors Section with Images -->
                     @if($customer->guarantors->count() > 0)
                     <div class="row">
                         <div class="col-sm-12">
                             <h4>Guarantor Information</h4>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Name</th>
-                                            <th>Father Name</th>
-                                            <th>Relation</th>
-                                            <th>NIC</th>
-                                            <th>Phone</th>
-                                            <th>Address</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($customer->guarantors as $guarantor)
-                                        <tr>
-                                            <td>
+                            <div class="guarantors-section">
+                                @foreach($customer->guarantors as $guarantor)
+                                <div class="guarantor-card">
+                                    <div class="guarantor-header">
+                                        <div class="guarantor-photo-container">
+                                            @if($guarantor->image)
+                                                <img src="{{ asset($guarantor->image) }}" alt="Guarantor Photo" class="guarantor-photo">
+                                            @else
+                                                <div class="guarantor-photo-placeholder">
+                                                    {{ strtoupper(substr($guarantor->name, 0, 2)) }}
+                                                </div>
+                                            @endif
+                                            <div class="guarantor-photo-label">
                                                 <span class="badge badge-{{ $guarantor->guarantor_no == 1 ? 'primary' : 'secondary' }}">
                                                     {{ $guarantor->guarantor_no == 1 ? 'Primary' : 'Secondary' }}
                                                 </span>
-                                            </td>
-                                            <td><strong>{{ $guarantor->name }}</strong></td>
-                                            <td>{{ $guarantor->father_name }}</td>
-                                            <td>{{ $guarantor->relation }}</td>
-                                            <td><code>{{ $guarantor->nic }}</code></td>
-                                            <td>{{ $guarantor->phone }}</td>
-                                            <td>{{ $guarantor->residence_address }}</td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="guarantor-details">
+                                            <h5>{{ $guarantor->name }}</h5>
+                                            <p class="mb-1"><strong>Father:</strong> {{ $guarantor->father_name }}</p>
+                                            <p class="mb-1"><strong>Relation:</strong> {{ $guarantor->relation }}</p>
+                                            <p class="mb-1"><strong>NIC:</strong> <code>{{ $guarantor->nic }}</code></p>
+                                            <p class="mb-1"><strong>Phone:</strong> {{ $guarantor->phone }}</p>
+                                            @if($guarantor->occupation)
+                                                <p class="mb-1"><strong>Occupation:</strong> {{ $guarantor->occupation }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="guarantor-addresses">
+                                        <div class="address-section">
+                                            <strong>Residence:</strong><br>
+                                            <small>{{ $guarantor->residence_address }}</small>
+                                        </div>
+                                        @if($guarantor->office_address)
+                                        <div class="address-section">
+                                            <strong>Office:</strong><br>
+                                            <small>{{ $guarantor->office_address }}</small>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -232,7 +260,7 @@
                         <div class="col-sm-12">
                             <div class="alert alert-warning">
                                 <strong>No Guarantors Found!</strong> This customer should have guarantors before making purchases.
-                                <a href="{{ route('guarantors.create') }}?customer={{ $customer->id }}" class="btn btn-sm btn-warning">Add Guarantor</a>
+                                <a href="{{ route('guarantors.create') }}?customer={{ $customer->id }}" class="btn btn-sm btn-warning no-print">Add Guarantor</a>
                             </div>
                         </div>
                     </div>
@@ -333,11 +361,145 @@
 
 @push('styles')
 <style>
+    /* Customer Photo Styles */
+    .customer-photo-container {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .customer-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 3px solid #007bff;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .customer-photo-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        background-color: #6c757d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5em;
+        font-weight: bold;
+        margin: 0 auto;
+        border: 3px solid #6c757d;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .customer-photo-label {
+        font-size: 0.8em;
+        color: #6c757d;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    /* Guarantor Cards */
+    .guarantors-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .guarantor-card {
+        flex: 1;
+        min-width: 300px;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        background-color: #f8f9fa;
+    }
+
+    .guarantor-header {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .guarantor-photo-container {
+        margin-right: 15px;
+        text-align: center;
+    }
+
+    .guarantor-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #007bff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .guarantor-photo-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #6c757d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        font-weight: bold;
+        border: 2px solid #6c757d;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .guarantor-photo-label {
+        margin-top: 5px;
+        font-size: 0.7em;
+    }
+
+    .guarantor-details {
+        flex: 1;
+    }
+
+    .guarantor-details h5 {
+        margin-bottom: 8px;
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .guarantor-details p {
+        margin-bottom: 5px;
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+
+    .guarantor-addresses {
+        border-top: 1px solid #dee2e6;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .address-section {
+        margin-bottom: 10px;
+    }
+
+    .address-section strong {
+        color: #495057;
+        font-size: 0.9em;
+    }
+
+    .address-section small {
+        color: #6c757d;
+        line-height: 1.4;
+    }
+
+    /* Print Styles */
     @media print {
+        .no-print,
         .ibox-tools,
         .sidebar,
         .navbar,
-        .footer {
+        .footer,
+        .btn {
             display: none !important;
         }
         
@@ -353,9 +515,66 @@
         .ibox-content {
             padding: 20px;
         }
-        
-        .btn {
-            display: none !important;
+
+        .customer-photo,
+        .customer-photo-placeholder {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #000;
+        }
+
+        .guarantor-photo,
+        .guarantor-photo-placeholder {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #000;
+        }
+
+        .guarantors-section {
+            display: block;
+        }
+
+        .guarantor-card {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+            border: 1px solid #000;
+            background-color: #f9f9f9;
+        }
+
+        .guarantor-header {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        /* Ensure good spacing for print */
+        .row {
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+        }
+
+        /* Print color adjustments */
+        .badge {
+            border: 1px solid #000;
+            padding: 2px 6px;
+        }
+
+        .table {
+            font-size: 0.85em;
+        }
+
+        .table th {
+            border-bottom: 2px solid #000;
+            background-color: #f0f0f0;
+        }
+
+        .table td {
+            border-bottom: 1px solid #ccc;
         }
     }
     
@@ -393,6 +612,28 @@
         border: 1px solid #dee2e6;
         border-radius: 4px;
         padding: 15px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .guarantors-section {
+            display: block;
+        }
+        
+        .guarantor-card {
+            min-width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .guarantor-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .guarantor-photo-container {
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
     }
 </style>
 @endpush

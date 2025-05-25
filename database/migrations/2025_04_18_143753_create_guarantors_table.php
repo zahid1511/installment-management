@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('nic');
             $table->string('phone');
             $table->text('residence_address');
+            $table->string('image')->nullable(); 
             $table->text('office_address')->nullable();
             $table->string('occupation')->nullable();
             $table->integer('guarantor_no'); // 1 or 2

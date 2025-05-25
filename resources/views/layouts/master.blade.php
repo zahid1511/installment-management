@@ -223,11 +223,18 @@
     </div>
 
     <!-- Mainly scripts -->
-    <script src="{{ asset('backend/js/jquery-3.1.1.min.js') }}"></script>
+    <!-- FIXED: Use only ONE jQuery version - using the newer CDN version for better compatibility -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Bootstrap and other plugins -->
     <script src="{{ asset('backend/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('backend/js/plugins/metisMenu/jquery.metisMenu.js') }}"></script>
     <script src="{{ asset('backend/js/plugins/slimscroll/jquery.slimscroll.min.js') }}"></script>
     <script src="{{ asset('backend/js/plugins/dataTables/datatables.min.js') }}"></script>
+    
+    <!-- DataTables CDN -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
     <!-- Flot -->
     <script src="{{ asset('backend/js/plugins/flot/jquery.flot.js') }}"></script>
     <script src="{{ asset('backend/js/plugins/flot/jquery.flot.tooltip.min.js') }}"></script>
@@ -260,14 +267,11 @@
 
     <!-- Toastr -->
     <script src="{{ asset('backend/js/plugins/toastr/toastr.min.js') }}"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-
 
     <script>
         $(document).ready(function() {
-
+            // Debug: Check if jQuery is loaded properly
+            console.log('jQuery version:', $.fn.jquery);
 
             var d1 = [[1262304000000, 6], [1264982400000, 3057], [1267401600000, 20434], [1270080000000, 31982], [1272672000000, 26602], [1275350400000, 27826], [1277942400000, 24302], [1280620800000, 24237], [1283299200000, 21004], [1285891200000, 12144], [1288569600000, 10577], [1291161600000, 10295]];
             var d2 = [[1262304000000, 5], [1264982400000, 200], [1267401600000, 1605], [1270080000000, 6129], [1272672000000, 11643], [1275350400000, 19055], [1277942400000, 30062], [1280620800000, 39197], [1283299200000, 37000], [1285891200000, 27000], [1288569600000, 21000], [1291161600000, 17000]];
@@ -276,35 +280,39 @@
                 { label: "Data 1", data: d1, color: '#17a084'},
                 { label: "Data 2", data: d2, color: '#127e68' }
             ];
-            $.plot($("#flot-chart1"), data1, {
-                xaxis: {
-                    tickDecimals: 0
-                },
-                series: {
-                    lines: {
-                        show: true,
-                        fill: true,
-                        fillColor: {
-                            colors: [{
-                                opacity: 1
-                            }, {
-                                opacity: 1
-                            }]
+            
+            // Only plot if the element exists
+            if ($("#flot-chart1").length) {
+                $.plot($("#flot-chart1"), data1, {
+                    xaxis: {
+                        tickDecimals: 0
+                    },
+                    series: {
+                        lines: {
+                            show: true,
+                            fill: true,
+                            fillColor: {
+                                colors: [{
+                                    opacity: 1
+                                }, {
+                                    opacity: 1
+                                }]
+                            },
+                        },
+                        points: {
+                            width: 0.1,
+                            show: false
                         },
                     },
-                    points: {
-                        width: 0.1,
-                        show: false
+                    grid: {
+                        show: false,
+                        borderWidth: 0
                     },
-                },
-                grid: {
-                    show: false,
-                    borderWidth: 0
-                },
-                legend: {
-                    show: false,
-                }
-            });
+                    legend: {
+                        show: false,
+                    }
+                });
+            }
 
             var lineData = {
                 labels: ["January", "February", "March", "April", "May", "June", "July"],
@@ -332,13 +340,14 @@
                 responsive: true
             };
 
-
-            var ctx = document.getElementById("lineChart").getContext("2d");
-            new Chart(ctx, {type: 'line', data: lineData, options:lineOptions});
-
-
+            // Only create chart if the element exists
+            if (document.getElementById("lineChart")) {
+                var ctx = document.getElementById("lineChart").getContext("2d");
+                new Chart(ctx, {type: 'line', data: lineData, options:lineOptions});
+            }
         });
     </script>
+    
     <script>
         //logout
         function triggerLogout() {
@@ -354,4 +363,3 @@
     @stack('script')
 </body>
 </html>
-

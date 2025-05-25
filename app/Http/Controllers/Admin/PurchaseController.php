@@ -80,7 +80,7 @@ class PurchaseController extends Controller
         return view('purchases.show', compact('purchase'));
     }
 
-private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerId)
+    private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerId)
     {
         $currentDate = Carbon::parse($purchase->first_installment_date);
         $remainingBalance = $purchase->remaining_balance;
@@ -120,16 +120,41 @@ private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerI
         }
     }
 
+    public function getInstallmentDetails($installmentId)
+    {
+        $installment = Installment::with(['customer', 'officer', 'purchase'])->findOrFail($installmentId);
+        
+        // Generate next receipt number
+        $lastReceipt = Installment::where('receipt_no', '!=', null)
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        $nextReceiptNumber = 'R-' . str_pad(
+            ($lastReceipt ? intval(substr($lastReceipt->receipt_no, 2)) + 1 : 1001), 
+            4, '0', STR_PAD_LEFT
+        );
+
+        return response()->json([
+            'receipt_no' => $nextReceiptNumber,
+            'installment_amount' => $installment->installment_amount,
+            'recovery_officer_id' => $installment->recovery_officer_id,
+            'recovery_officer_name' => $installment->officer?->name ?? 'N/A',
+            'customer_name' => $installment->customer->name,
+            'due_date' => $installment->due_date->format('d/m/Y'),
+            'remarks' => "Payment for installment due on " . $installment->due_date->format('d/m/Y')
+        ]);
+    }
+
     // Update the processPayment method in PurchaseController
-    public function processPayment(Request $request, Purchase $purchase)
+        public function processPayment(Request $request, Purchase $purchase)
     {
         $request->validate([
             'installment_id' => 'required|exists:installments,id',
             'payment_date' => 'required|date',
-            'receipt_no' => 'required|string',
+            'receipt_no' => 'required|string|unique:installments,receipt_no',
             'payment_amount' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
-            'recovery_officer_id' => 'required|exists:recovery_officers,id', // Changed from recovery_officer to recovery_officer_id
+            'recovery_officer_id' => 'required|exists:recovery_officers,id',
             'payment_method' => 'required|string',
             'remarks' => 'nullable|string',
         ]);
@@ -139,18 +164,26 @@ private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerI
         // Calculate fine if overdue
         $fine = $installment->calculateFine();
         
+        // Calculate new balance after payment
+        $totalPayment = $request->payment_amount - ($request->discount ?? 0);
+        $newBalance = max(0, $installment->pre_balance - $totalPayment);
+        
         // Update installment
         $installment->update([
             'date' => $request->payment_date,
             'receipt_no' => $request->receipt_no,
             'installment_amount' => $request->payment_amount,
             'discount' => $request->discount ?? 0,
+            'balance' => $newBalance,
             'fine_amount' => $fine,
             'status' => 'paid',
             'payment_method' => $request->payment_method,
-            'recovery_officer_id' => $request->recovery_officer_id, // Changed to recovery_officer_id
+            'recovery_officer_id' => $request->recovery_officer_id,
             'remarks' => $request->remarks,
         ]);
+
+        // Update subsequent installments' pre_balance
+        $this->updateSubsequentInstallments($purchase, $installment, $newBalance);
 
         // Check if all installments are paid
         $remainingInstallments = $purchase->installments()->where('status', 'pending')->count();
@@ -160,17 +193,31 @@ private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerI
 
         // Update customer defaulter status
         $customer = $purchase->customer;
-        $customer->update([
-            'is_defaulter' => $customer->purchases()
-                ->where('status', 'active')
-                ->get()
-                ->filter(function($p) {
-                    return $p->isDefaulted();
-                })
-                ->isNotEmpty()
-        ]);
+        $isDefaulter = $customer->installments()
+            ->where('status', 'pending')
+            ->where('due_date', '<', now())
+            ->exists();
+        
+        $customer->update(['is_defaulter' => $isDefaulter]);
 
         return redirect()->route('purchases.show', $purchase)
             ->with('success', 'Payment processed successfully');
+    }
+
+    // Helper method to update subsequent installments
+    private function updateSubsequentInstallments(Purchase $purchase, Installment $paidInstallment, $newBalance)
+    {
+        $subsequentInstallments = $purchase->installments()
+            ->where('due_date', '>', $paidInstallment->due_date)
+            ->where('status', 'pending')
+            ->orderBy('due_date')
+            ->get();
+
+        $currentBalance = $newBalance;
+        
+        foreach ($subsequentInstallments as $installment) {
+            $installment->update(['pre_balance' => $currentBalance]);
+            $currentBalance = max(0, $currentBalance - $installment->installment_amount);
+        }
     }
 }

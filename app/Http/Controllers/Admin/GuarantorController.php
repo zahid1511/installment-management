@@ -34,10 +34,12 @@ class GuarantorController extends Controller
             'office_address' => 'nullable|string',
             'occupation' => 'nullable|string|max:255',
             'guarantor_no' => 'required|in:1,2',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->all();
 
+        // Handle image upload
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $filename = time() . '_' . $image->getClientOriginalName();
@@ -45,6 +47,7 @@ class GuarantorController extends Controller
             $data['image'] = 'backend/img/guarantors/' . $filename;
         }
 
+        // Check if guarantor number already exists for this customer
         $existingGuarantor = Guarantor::where('customer_id', $data['customer_id'])
             ->where('guarantor_no', $data['guarantor_no'])
             ->first();
@@ -57,6 +60,18 @@ class GuarantorController extends Controller
         Guarantor::create($data);
 
         return redirect()->route('guarantors.index')->with('success', 'Guarantor added successfully');
+    }
+
+    public function show(Guarantor $guarantor)
+    {
+        $guarantor->load('customer');
+        return view('guarantors.show', compact('guarantor'));
+    }
+
+    public function edit(Guarantor $guarantor)
+    {
+        $customers = Customer::all();
+        return view('guarantors.edit', compact('guarantor', 'customers'));
     }
 
     public function update(Request $request, Guarantor $guarantor)
@@ -72,14 +87,18 @@ class GuarantorController extends Controller
             'office_address' => 'nullable|string',
             'occupation' => 'nullable|string|max:255',
             'guarantor_no' => 'required|in:1,2',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->all();
 
+        // Handle image upload
         if ($request->hasFile('image')) {
+            // Delete old image if it exists
             if ($guarantor->image && file_exists(public_path($guarantor->image))) {
                 unlink(public_path($guarantor->image));
             }
+            
             $image = $request->file('image');
             $filename = time() . '_' . $image->getClientOriginalName();
             $image->move(public_path('backend/img/guarantors'), $filename);
@@ -102,20 +121,13 @@ class GuarantorController extends Controller
         return redirect()->route('guarantors.index')->with('success', 'Guarantor updated successfully');
     }
 
-
-    public function show(Guarantor $guarantor)
-    {
-        return view('guarantors.show', compact('guarantor'));
-    }
-
-    public function edit(Guarantor $guarantor)
-    {
-        $customers = Customer::all();
-        return view('guarantors.edit', compact('guarantor', 'customers'));
-    }
-
     public function destroy(Guarantor $guarantor)
     {
+        // Delete image if it exists
+        if ($guarantor->image && file_exists(public_path($guarantor->image))) {
+            unlink(public_path($guarantor->image));
+        }
+
         $guarantor->delete();
         return redirect()->route('guarantors.index')->with('success', 'Guarantor deleted successfully');
     }
