@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect asset folders to public
+    RewriteCond %{REQUEST_URI} ^/(backend|vendor|storage|images|css|js|fonts|build|mix) [NC]
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Laravel rewrite
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
