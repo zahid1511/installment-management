@@ -27,11 +27,11 @@
                     <td>{{ $product->serial_no }}</td>
                     <td>{{ number_format($product->price, 2) }}</td>
                     <td>
-                        <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
                         <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>

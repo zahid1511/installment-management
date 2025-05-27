@@ -47,12 +47,12 @@
                     </td>
                     <td>
                         <div class="btn-group">
-                            <a href="{{ route('recovery-officers.show', $officer) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('recovery-officers.edit', $officer) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{{ route('recovery-officers.show', $officer) }}" class="btn btn-sm btn-info"><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('recovery-officers.edit', $officer) }}" class="btn btn-sm btn-warning"><i class="fa fa-edit"></i></a>
                             <form action="{{ route('recovery-officers.destroy', $officer) }}" method="POST" style="display: inline;">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
                             </form>
                         </div>
                     </td>

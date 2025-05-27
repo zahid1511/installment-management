@@ -33,7 +33,7 @@ class GuarantorController extends Controller
             'residence_address' => 'required|string',
             'office_address' => 'nullable|string',
             'occupation' => 'nullable|string|max:255',
-            'guarantor_no' => 'required|in:1,2',
+            'guarantor_no' => 'required|in:1,2,3,4',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -86,7 +86,7 @@ class GuarantorController extends Controller
             'residence_address' => 'required|string',
             'office_address' => 'nullable|string',
             'occupation' => 'nullable|string|max:255',
-            'guarantor_no' => 'required|in:1,2',
+            'guarantor_no' => 'required|in:1,2,3,4',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 

@@ -56,9 +56,31 @@
                                 <td>{{ $guarantor->phone }}</td>
                                 <td>{{ $guarantor->relation }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $guarantor->guarantor_no == 1 ? 'primary' : 'secondary' }}">
-                                        {{ $guarantor->guarantor_no == 1 ? 'Primary' : 'Secondary' }}
-                                    </span>
+                                    @php
+                                        switch($guarantor->guarantor_no) {
+                                            case 1:
+                                                $label = 'Primary';
+                                                $color = 'primary';
+                                                break;
+                                            case 2:
+                                                $label = 'Secondary';
+                                                $color = 'secondary';
+                                                break;
+                                            case 3:
+                                                $label = 'Third';
+                                                $color = 'info';
+                                                break;
+                                            case 4:
+                                                $label = 'Reserve';
+                                                $color = 'dark';
+                                                break;
+                                            default:
+                                                $label = 'Unknown';
+                                                $color = 'light';
+                                        }
+                                    @endphp
+
+                                    <span class="badge bg-{{ $color }}">{{ $label }} Guarantor</span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
@@ -71,7 +93,7 @@
                                             <i class="fa fa-edit"></i>
                                         </a>
                                         <form action="{{ route('guarantors.destroy', $guarantor->id) }}" method="POST"
-                                            class="d-inline"
+                                            class="" style="display: grid;"
                                             onsubmit="return confirm('Are you sure you want to delete this guarantor?');">
                                             @csrf
                                             @method('DELETE')

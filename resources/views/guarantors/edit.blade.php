@@ -38,25 +38,43 @@
 
             <div class="mb-3">
                 <label>Guarantor Number</label>
-                <div>
+                <div class="mb-2">
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor1" value="1"
-                            {{ $guarantor->guarantor_no == 1 ? 'checked' : '' }} required>
+                            {{ old('guarantor_no', $guarantor->guarantor_no ?? null) == 1 ? 'checked' : '' }} required>
                         <label class="form-check-label" for="guarantor1">
                             Primary Guarantor (1)
                         </label>
                     </div>
+
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor2" value="2"
-                            {{ $guarantor->guarantor_no == 2 ? 'checked' : '' }} required>
+                            {{ old('guarantor_no', $guarantor->guarantor_no ?? null) == 2 ? 'checked' : '' }} required>
                         <label class="form-check-label" for="guarantor2">
                             Secondary Guarantor (2)
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor3" value="3"
+                            {{ old('guarantor_no', $guarantor->guarantor_no ?? null) == 3 ? 'checked' : '' }} required>
+                        <label class="form-check-label" for="guarantor3">
+                            Third Guarantor (3)
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor4" value="4"
+                            {{ old('guarantor_no', $guarantor->guarantor_no ?? null) == 4 ? 'checked' : '' }} required>
+                        <label class="form-check-label" for="guarantor4">
+                            Reserve Guarantor (4)
                         </label>
                     </div>
                 </div>
                 @error('guarantor_no')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
+
                 <div id="guarantor_no_error" class="text-danger" style="display: none;"></div>
             </div>
 

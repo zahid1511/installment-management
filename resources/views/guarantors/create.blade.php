@@ -23,7 +23,7 @@
 
         <div class="mb-3">
             <label>Guarantor Number</label>
-            <div>
+            <div class="mb-2">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor1" value="1" {{ old('guarantor_no') == '1' ? 'checked' : '' }} required>
                     <label class="form-check-label" for="guarantor1">
@@ -37,10 +37,27 @@
                     </label>
                 </div>
             </div>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor3" value="3" {{ old('guarantor_no') == '3' ? 'checked' : '' }} required>
+                    <label class="form-check-label" for="guarantor3">
+                        Third Guarantor (3)
+                    </label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="guarantor_no" id="guarantor4" value="4" {{ old('guarantor_no') == '4' ? 'checked' : '' }} required>
+                    <label class="form-check-label" for="guarantor4">
+                        Reserve Guarantor (4)
+                    </label>
+                </div>
+            </div>
+
             @error('guarantor_no')
                 <small class="text-danger">{{ $message }}</small>
             @enderror
         </div>
+
 
         <div class="row">
             <div class="col-md-6">
@@ -133,3 +150,29 @@
     </form>
 </div>
 @endsection
+<script>
+    $(document).ready(function() {
+        $('#customer-select').select2({
+            placeholder: 'Search for a customer',
+            minimumInputLength: 1,
+            ajax: {
+                url: '{{ route("customers.search") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term // search term
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(customer => ({
+                            id: customer.id,
+                            text: customer.name
+                        }))
+                    };
+                }
+            }
+        });
+    });
+</script>
