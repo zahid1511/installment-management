@@ -218,12 +218,40 @@
                                                 <img src="{{ asset($guarantor->image) }}" alt="Guarantor Photo" class="guarantor-photo">
                                             @else
                                                 <div class="guarantor-photo-placeholder">
-                                                    {{ strtoupper(substr($guarantor->name, 0, 2)) }}
+                                                    {{ strtoupper(substr($guarantor->name, 0, 4)) }}
                                                 </div>
                                             @endif
-                                            <div class="guarantor-photo-label">
+                                            {{-- <div class="guarantor-photo-label">
                                                 <span class="badge badge-{{ $guarantor->guarantor_no == 1 ? 'primary' : 'secondary' }}">
                                                     {{ $guarantor->guarantor_no == 1 ? 'Primary' : 'Secondary' }}
+                                                </span>
+                                            </div> --}}
+                                            <div class="guarantor-photo-label">
+                                                @php
+                                                    switch($guarantor->guarantor_no) {
+                                                        case 1:
+                                                            $label = 'Primary';
+                                                            $color = 'primary';
+                                                            break;
+                                                        case 2:
+                                                            $label = 'Secondary';
+                                                            $color = 'secondary';
+                                                            break;
+                                                        case 3:
+                                                            $label = 'Third';
+                                                            $color = 'info';
+                                                            break;
+                                                        case 4:
+                                                            $label = 'Reserve';
+                                                            $color = 'dark';
+                                                            break;
+                                                        default:
+                                                            $label = 'Unknown';
+                                                            $color = 'light';
+                                                    }
+                                                @endphp
+                                                <span class="badge badge-{{ $color }}">
+                                                    {{ $label }} Guarantor
                                                 </span>
                                             </div>
                                         </div>

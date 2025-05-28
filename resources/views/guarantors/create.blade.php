@@ -150,29 +150,3 @@
     </form>
 </div>
 @endsection
-<script>
-    $(document).ready(function() {
-        $('#customer-select').select2({
-            placeholder: 'Search for a customer',
-            minimumInputLength: 1,
-            ajax: {
-                url: '{{ route("customers.search") }}',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        q: params.term // search term
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: data.map(customer => ({
-                            id: customer.id,
-                            text: customer.name
-                        }))
-                    };
-                }
-            }
-        });
-    });
-</script>
