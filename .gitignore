@@ -32,6 +32,9 @@ yarn-error.log
 bootstrap/compiled.php
 app/storage/
 
+public/backend/img/gurantors
+public/backend/img/customers
+
 # Laravel 5 & Lumen specific
 public/storage
 public/hot
