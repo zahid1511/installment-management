@@ -11,116 +11,37 @@
             <div class="alert alert-success custom-alert">{{ session('success') }}</div>
         @endif
 
-        @if ($customers->count())
-            <div class="table-responsive custom-table-wrapper">
-                <table id="customers-table" class="table table-bordered custom-table">
-                    <thead>
-                        <tr>
-                            <th class="field-spacing">Photo</th>
-                            <th class="field-spacing">Account No</th>
-                            <th class="field-spacing">Name</th>
-                            <th class="field-spacing">Mobile</th>
-                            <th class="field-spacing">NIC</th>
-                            <th class="field-spacing">Purchases</th>
-                            <th class="field-spacing">Total Amount</th>
-                            <th class="field-spacing">Paid Amount</th>
-                            <th class="field-spacing">Balance</th>
-                            <th class="field-spacing">Status</th>
-                            <th class="field-spacing">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($customers as $customer)
-                            @php
-                                // Calculate values using relationships
-                                $totalPurchases = $customer->purchases->count();
-                                $totalAmount = $customer->purchases->sum('total_price');
-                                $totalAdvance = $customer->purchases->sum('advance_payment');
-                                $totalPaid = $totalAdvance + $customer->installments()->where('status', 'paid')->sum('installment_amount');
-                                $remainingBalance = $totalAmount - $totalPaid;
-                                $isDefaulter = $customer->installments()->where('status', 'pending')->where('due_date', '<', now())->exists();
-                            @endphp
-                            <tr class="{{ $isDefaulter ? 'table-warning' : '' }} custom-row">
-                                <td class="field-spacing photo-cell">
-                                    @if ($customer->image)
-                                        <img src="{{ asset('backend/img/customers/' . $customer->image) }}" alt="Customer Photo"
-                                            width="50" height="50" style="object-fit: cover; border-radius: 50%;">
-                                    @else
-                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center custom-photo-placeholder" style="width: 50px; height: 50px;">
-                                            {{ strtoupper(substr($customer->name, 0, 2)) }}
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="field-spacing"><strong>{{ $customer->account_no }}</strong></td>
-                                <td class="field-spacing">
-                                    <div>{{ $customer->name }}</div>
-                                    <small class="text-muted custom-subtext">{{ $customer->father_name }}</small>
-                                </td>
-                                <td class="field-spacing">
-                                    <div>{{ $customer->mobile_1 }}</div>
-                                    @if($customer->mobile_2)
-                                        <small class="text-muted custom-subtext">{{ $customer->mobile_2 }}</small>
-                                    @endif
-                                </td>
-                                <td class="field-spacing">{{ $customer->nic }}</td>
-                                <td class="field-spacing">
-                                    <span class="badge badge-info custom-badge">{{ $totalPurchases }}</span>
-                                </td>
-                                <td class="field-spacing">Rs. {{ number_format($totalAmount, 0) }}</td>
-                                <td class="field-spacing">Rs. {{ number_format($totalPaid, 0) }}</td>
-                                <td class="field-spacing">Rs. {{ number_format($remainingBalance, 0) }}</td>
-                                <td class="field-spacing">
-                                    @if($totalPurchases == 0)
-                                        <span class="badge badge-secondary custom-badge">No Purchases</span>
-                                    @elseif($remainingBalance == 0)
-                                        <span class="badge badge-success custom-badge">Completed</span>
-                                    @elseif($isDefaulter)
-                                        <span class="badge badge-danger custom-badge">Defaulter</span>
-                                    @else
-                                        <span class="badge badge-primary custom-badge">Active</span>
-                                    @endif
-                                </td>
-                                <td class="field-spacing">
-                                    <div class="btn-group action-btn-group" role="group">
-                                        <a href="{{ route('customers.statement', $customer->id) }}"
-                                            class="btn btn-sm btn-info custom-action-btn" title="View Statement">
-                                            <i class="fa fa-file-text"></i>
-                                        </a>
-                                        <a href="{{ route('customers.edit', $customer->id) }}"
-                                            class="btn btn-sm btn-warning custom-action-btn" title="Edit">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        
-                                        <!-- Single Delete Button -->
-                                        <button onclick="confirmDelete({{ $customer->id }}, '{{ $customer->name }}', {{ $totalPurchases }})"
-                                            class="btn btn-sm btn-danger custom-action-btn" title="Delete Customer">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="alert alert-info text-center custom-empty-state">
-                <h4>No customers found</h4>
-                <p>Start by adding your first customer!</p>
-                <a href="{{ route('customers.create') }}" class="btn btn-primary custom-add-btn">Add Customer</a>
-            </div>
+        @if (session('error'))
+            <div class="alert alert-danger custom-alert">{{ session('error') }}</div>
         @endif
 
-        <!-- Pagination -->
-        @if ($customers->hasPages())
-            <div class="d-flex justify-content-center custom-pagination">
-                {{ $customers->links() }}
-            </div>
-        @endif
+        <div class="table-responsive custom-table-wrapper">
+            <table id="customers-table" class="table table-bordered custom-table">
+                <thead>
+                    <tr>
+                        <th class="field-spacing">Photo</th>
+                        <th class="field-spacing">Account No</th>
+                        <th class="field-spacing">Name</th>
+                        <th class="field-spacing">Mobile</th>
+                        <th class="field-spacing">NIC</th>
+                        <th class="field-spacing">Purchases</th>
+                        <th class="field-spacing">Total Amount</th>
+                        <th class="field-spacing">Paid Amount</th>
+                        <th class="field-spacing">Balance</th>
+                        <th class="field-spacing">Status</th>
+                        <th class="field-spacing">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- DataTables will populate this -->
+                </tbody>
+            </table>
+        </div>
     </div>
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 <style>
     /* Existing styles retained */
     .table th {
@@ -227,35 +148,66 @@
         margin-bottom: 20px;
     }
 
-    .custom-empty-state {
-        padding: 20px;
-        border-radius: 8px;
-        background-color: #e7f1ff;
-    }
-
-    .custom-empty-state h4 {
-        margin-bottom: 10px;
-        font-size: 1.5rem;
-    }
-
-    .custom-empty-state p {
-        margin-bottom: 15px;
-        font-size: 1rem;
-    }
-
-    .custom-pagination {
-        margin-top: 20px;
-    }
-
-    .custom-pagination .pagination .page-link {
+    /* DataTables Custom Styling */
+    .dataTables_wrapper .dataTables_length select {
+        border: 1px solid #ced4da;
         border-radius: 4px;
-        margin: 0 3px;
-        transition: all 0.2s ease;
+        padding: 5px 10px;
     }
 
-    .custom-pagination .pagination .page-link:hover {
-        background-color: #007bff;
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-left: 10px;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        padding-top: 15px;
+        color: #6c757d;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin: 0 2px;
+        padding: 8px 12px;
+        background: #fff;
+        color: #495057;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: #007bff;
         color: #fff;
+        border-color: #007bff;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        background: #f8f9fa;
+        color: #6c757d;
+        border-color: #dee2e6;
+    }
+
+    /* Loading overlay */
+    .dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 200px;
+        margin-left: -100px;
+        margin-top: -25px;
+        text-align: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     /* Responsive adjustments */
@@ -273,101 +225,71 @@
             font-size: 0.9rem;
         }
 
-        .custom-photo-placeholder, img {
-            width: 40px !important;
-            height: 40px !important;
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            text-align: center;
         }
     }
 </style>
 @endpush
 
 @push('script')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#customers-table').DataTable({
-            paging: false,
-            info: false,
-            ordering: true,
-            searching: true,
-            responsive: true,
-            columnDefs: [
-                { orderable: false, targets: [0, -1] } // Disable sorting on photo and actions columns
-            ]
-        });
+$(document).ready(function() {
+    $('#customers-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('customers.index') }}",
+            type: 'GET'
+        },
+        columns: [
+            { data: 'photo', name: 'photo', orderable: false, searchable: false },
+            { data: 'account_no', name: 'account_no' },
+            { data: 'name_with_father', name: 'name' },
+            { data: 'mobile_numbers', name: 'mobile_1' },
+            { data: 'nic', name: 'nic' },
+            { data: 'purchases_count', name: 'purchases_count', orderable: false, searchable: false },
+            { data: 'total_amount', name: 'total_amount', orderable: false, searchable: false },
+            { data: 'paid_amount', name: 'paid_amount', orderable: false, searchable: false },
+            { data: 'balance', name: 'balance', orderable: false, searchable: false },
+            { data: 'status', name: 'status', orderable: false, searchable: false },
+            { data: 'actions', name: 'actions', orderable: false, searchable: false }
+        ],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        order: [[1, 'desc']]
     });
+});
 
-    function confirmDelete(customerId, customerName, totalPurchases) {
-        let message = '';
-        
-        if (totalPurchases > 0) {
-            message = `⚠️ COMPLETE DELETE WARNING!\n\nCustomer: ${customerName}\nThis customer has ${totalPurchases} purchase(s).\n\nThis will permanently delete:\n• Customer record\n• All ${totalPurchases} Purchase(s)\n• All Installments\n• All Guarantors\n• All Images\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?`;
-        } else {
-            message = `Delete Customer: ${customerName}\n\nThis will delete:\n• Customer record\n• All Guarantors\n• Customer image\n\nAre you sure?`;
-        }
-        
-        if (confirm(message)) {
-            // Show loading state
-            const btn = event.target.closest('button');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-            
-            // Create form and submit
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/admin/customers/${customerId}`;
-            
-            const methodField = document.createElement('input');
-            methodField.type = 'hidden';
-            methodField.name = '_method';
-            methodField.value = 'DELETE';
-            
-            const csrfField = document.createElement('input');
-            csrfField.type = 'hidden';
-            csrfField.name = '_token';
-            csrfField.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            
-            form.appendChild(methodField);
-            form.appendChild(csrfField);
-            document.body.appendChild(form);
-            
-            // If it's an AJAX-supported browser, use AJAX
-            if (window.fetch) {
-                fetch(form.action, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfField.value,
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('✅ ' + data.message);
-                        window.location.reload();
-                    } else {
-                        alert('❌ Error: ' + data.message);
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    alert('❌ An error occurred while deleting the customer.');
-                    console.error('Error:', error);
-                    btn.innerHTML = originalHtml;
-                    btn.disabled = false;
-                })
-                .finally(() => {
-                    document.body.removeChild(form);
-                });
-            } else {
-                // Fallback to form submission
-                form.submit();
+function confirmDelete(customerId, customerName, totalPurchases) {
+    let message = totalPurchases > 0 
+        ? `⚠️ WARNING! This will delete customer "${customerName}" and all ${totalPurchases} purchases. Continue?`
+        : `Delete customer "${customerName}"?`;
+    
+    if (confirm(message)) {
+        fetch(`/admin/customers/${customerId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                $('#customers-table').DataTable().ajax.reload();
+                alert('✅ ' + data.message);
+            } else {
+                alert('❌ ' + data.message);
+            }
+        });
     }
+}
 </script>
 @endpush

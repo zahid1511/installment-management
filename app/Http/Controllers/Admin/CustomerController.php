@@ -6,16 +6,98 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\Facades\DataTables;
 
 class CustomerController extends Controller
 {
-    // Display all customers
-    public function index()
+    // Display all customers - Updated for DataTables
+    public function index(Request $request)
     {
-        $customers = Customer::with(['purchases', 'installments'])
-            ->latest()
-            ->paginate(10);
-        return view('customers.index', compact('customers'));
+        if ($request->ajax()) {
+            $customers = Customer::with(['purchases', 'installments'])->select('customers.*');
+            
+            return DataTables::of($customers)
+                ->addColumn('photo', function ($customer) {
+                    if ($customer->image) {
+                        return '<img src="' . asset('backend/img/customers/' . $customer->image) . '" alt="Customer Photo" width="50" height="50" style="object-fit: cover; border-radius: 50%;">';
+                    } else {
+                        return '<div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1rem; font-weight: 500;">' . strtoupper(substr($customer->name, 0, 2)) . '</div>';
+                    }
+                })
+                ->addColumn('name_with_father', function ($customer) {
+                    $html = '<div>' . $customer->name . '</div>';
+                    if ($customer->father_name) {
+                        $html .= '<small class="text-muted">' . $customer->father_name . '</small>';
+                    }
+                    return $html;
+                })
+                ->addColumn('mobile_numbers', function ($customer) {
+                    $html = '<div>' . $customer->mobile_1 . '</div>';
+                    if ($customer->mobile_2) {
+                        $html .= '<small class="text-muted">' . $customer->mobile_2 . '</small>';
+                    }
+                    return $html;
+                })
+                ->addColumn('purchases_count', function ($customer) {
+                    $count = $customer->purchases->count();
+                    return '<span class="badge badge-info">' . $count . '</span>';
+                })
+                ->addColumn('total_amount', function ($customer) {
+                    $totalAmount = $customer->purchases->sum('total_price');
+                    return 'Rs. ' . number_format($totalAmount, 0);
+                })
+                ->addColumn('paid_amount', function ($customer) {
+                    $totalAdvance = $customer->purchases->sum('advance_payment');
+                    $totalPaid = $totalAdvance + $customer->installments()->where('status', 'paid')->sum('installment_amount');
+                    return 'Rs. ' . number_format($totalPaid, 0);
+                })
+                ->addColumn('balance', function ($customer) {
+                    $totalAmount = $customer->purchases->sum('total_price');
+                    $totalAdvance = $customer->purchases->sum('advance_payment');
+                    $totalPaid = $totalAdvance + $customer->installments()->where('status', 'paid')->sum('installment_amount');
+                    $remainingBalance = $totalAmount - $totalPaid;
+                    return 'Rs. ' . number_format($remainingBalance, 0);
+                })
+                ->addColumn('status', function ($customer) {
+                    $totalPurchases = $customer->purchases->count();
+                    $totalAmount = $customer->purchases->sum('total_price');
+                    $totalAdvance = $customer->purchases->sum('advance_payment');
+                    $totalPaid = $totalAdvance + $customer->installments()->where('status', 'paid')->sum('installment_amount');
+                    $remainingBalance = $totalAmount - $totalPaid;
+                    $isDefaulter = $customer->installments()->where('status', 'pending')->where('due_date', '<', now())->exists();
+                    
+                    if ($totalPurchases == 0) {
+                        return '<span class="badge badge-secondary">No Purchases</span>';
+                    } elseif ($remainingBalance == 0) {
+                        return '<span class="badge badge-success">Completed</span>';
+                    } elseif ($isDefaulter) {
+                        return '<span class="badge badge-danger">Defaulter</span>';
+                    } else {
+                        return '<span class="badge badge-primary">Active</span>';
+                    }
+                })
+                ->addColumn('actions', function ($customer) {
+                    $totalPurchases = $customer->purchases->count();
+                    
+                    return '
+                        <div class="btn-group" role="group">
+                            <a href="' . route('customers.statement', $customer->id) . '" class="btn btn-sm btn-info" title="View Statement">
+                                <i class="fa fa-file-text"></i>
+                            </a>
+                            <a href="' . route('customers.edit', $customer->id) . '" class="btn btn-sm btn-warning" title="Edit">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            <button onclick="confirmDelete(' . $customer->id . ', \'' . addslashes($customer->name) . '\', ' . $totalPurchases . ')" class="btn btn-sm btn-danger" title="Delete Customer">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['photo', 'name_with_father', 'mobile_numbers', 'purchases_count', 'status', 'actions'])
+                ->make(true);
+        }
+        
+        return view('customers.index');
     }
 
     // Show create form
