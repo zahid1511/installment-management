@@ -41,346 +41,249 @@
                         }
                     @endphp
                     
-                    <!-- Customer Info Header with Image -->
-                    <div class="row">
-                        <div class="col-sm-2 text-center">
-                            <!-- Customer Image -->
-                            <div class="customer-photo-container">
-                                @if($customer->image)
-                                    <img src="{{ asset('backend/img/customers/' . $customer->image) }}" 
-                                         alt="Customer Photo" class="customer-photo">
-                                @else
-                                    <div class="customer-photo-placeholder">
-                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
-                                    </div>
-                                @endif
-                                <div class="customer-photo-label">Customer Photo</div>
+                    <!-- Header with Company Info -->
+                    <div class="statement-header">
+                        <div class="company-info">
+                            <h3>Customer Account Information Detail</h3>
+                            <div class="print-info">
+                                <div>Print Date: {{ date('d-M-Y') }}</div>
+                                <div>Print Time: {{ date('H:i:s A') }}</div>
+                                <div>Page 1 of 1</div>
                             </div>
                         </div>
-                        <div class="col-sm-5">
-                            <h4>Customer Information</h4>
-                            <address>
-                                <strong>{{ $customer->name }}</strong><br>
-                                Account No: <code>{{ $customer->account_no }}</code><br>
-                                @if($customer->father_name)
-                                    Father Name: {{ $customer->father_name }}<br>
-                                @endif
-                                NIC: <code>{{ $customer->nic }}</code><br>
-                                Phone: {{ $customer->mobile_1 }}
-                                @if($customer->mobile_2)
-                                    , {{ $customer->mobile_2 }}
-                                @endif
-                                <br>
-                                @if($customer->residence)
-                                    Address: {{ $customer->residence }}<br>
-                                @endif
-                                @if($customer->occupation)
-                                    Occupation: {{ $customer->occupation }}
-                                @endif
-                            </address>
+                    </div>
+
+                    <!-- Customer Info with Photos Section -->
+                    <div class="customer-section">
+                        <div class="customer-basic-info">
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <strong>Account No:</strong> {{ $customer->account_no }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Date:</strong> {{ date('d-M-Y') }}
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <strong>Customer:</strong> {{ $customer->name }}
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <strong>F/H Name:</strong> {{ $customer->father_name ?? 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <strong>Occupation:</strong> {{ $customer->occupation ?? 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-item full-width">
+                                    <strong>Residence:</strong> {{ $customer->residence ?? 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-item full-width">
+                                    <strong>Off. Address:</strong> {{ $customer->office_address ?? 'N/A' }}
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-sm-5 text-right">
-                            <h4>Statement Information</h4>
-                            <p><strong>Statement Date:</strong> {{ date('d M Y') }}<br>
-                            <strong>Total Purchases:</strong> {{ $totalPurchases }}<br>
-                            @if($customer->gender)
-                                <strong>Gender:</strong> {{ ucfirst($customer->gender) }}<br>
+
+                        <!-- Customer Photo -->
+                        <div class="customer-photo-section">
+                            @if($customer->image)
+                                <img src="{{ asset('backend/img/customers/' . $customer->image) }}" alt="Customer" class="customer-img">
+                            @else
+                                <div class="customer-placeholder">{{ strtoupper(substr($customer->name, 0, 2)) }}</div>
                             @endif
-                            <strong>Customer Status:</strong> 
-                            <span class="badge badge-{{ $customerStatus == 'DEFAULTER' ? 'danger' : ($customerStatus == 'COMPLETED' ? 'success' : ($customerStatus == 'NO PURCHASES' ? 'secondary' : 'primary')) }}">
-                                {{ $customerStatus }}
-                            </span>
-                            </p>
                         </div>
                     </div>
 
-                    <!-- Financial Summary -->
+                    <!-- Financial and Product Summary -->
                     @if($totalPurchases > 0)
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h4>Financial Summary</h4>
-                            <div class="table-responsive">
-                                <table class="table invoice-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Description</th>
-                                            <th class="text-right">Amount (Rs.)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Total Purchase Amount</td>
-                                            <td class="text-right">{{ number_format($totalPurchaseAmount, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Total Advance Payments</td>
-                                            <td class="text-right">({{ number_format($totalAdvancePayments, 2) }})</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Total Installments Paid</td>
-                                            <td class="text-right">({{ number_format($totalPaidInstallments, 2) }})</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Current Outstanding Balance</strong></td>
-                                            <td class="text-right"><strong>{{ number_format($currentBalance, 2) }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Total Monthly Installment (Active)</td>
-                                            <td class="text-right">{{ number_format($totalMonthlyInstallments, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Pending Installments</td>
-                                            <td class="text-right">{{ $pendingInstallments }} installments</td>
-                                        </tr>
-                                        @if($overdueInstallments > 0)
-                                        <tr class="danger">
-                                            <td><strong>Overdue Installments</strong></td>
-                                            <td class="text-right"><strong>{{ $overdueInstallments }} installments</strong></td>
-                                        </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
+                    <div class="financial-section">
+                        <div class="financial-left">
+                            <div class="info-group">
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Mobile # :</strong> {{ $customer->mobile_1 }}</div>
+                                    <div class="info-item"><strong>Company:</strong> {{ $customer->purchases->first()->product->company ?? 'N/A' }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Rl/Cr Mobile:</strong> {{ $customer->mobile_2 ?? 'N/A' }}</div>
+                                    <div class="info-item"><strong>Product:</strong> {{ $customer->purchases->first()->product->model ?? 'N/A' }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>NIC:</strong> {{ $customer->nic }}</div>
+                                    <div class="info-item"><strong>Model:</strong> {{ $customer->purchases->first()->product->model ?? 'N/A' }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Gender:</strong> {{ ucfirst($customer->gender ?? 'N/A') }}</div>
+                                    <div class="info-item"><strong>Serial #:</strong> {{ $customer->purchases->first()->product->serial_no ?? 'N/A' }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Purchase Price:</strong> {{ number_format($totalPurchaseAmount, 0) }}</div>
+                                    <div class="info-item"><strong>Monthly Installment:</strong> {{ number_format($totalMonthlyInstallments, 0) }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Advance Payment:</strong> {{ number_format($totalAdvancePayments, 0) }}</div>
+                                    <div class="info-item"><strong>Duration (Months):</strong> {{ $customer->purchases->first()->installment_months ?? 0 }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Total Paid:</strong> {{ number_format($totalPaidAmount, 0) }}</div>
+                                    <div class="info-item"><strong>Paid Installments:</strong> {{ $customer->installments()->where('status', 'paid')->count() }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Remaining Balance:</strong> {{ number_format($currentBalance, 0) }}</div>
+                                    <div class="info-item"><strong>Pending Installments:</strong> {{ $pendingInstallments }}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-item"><strong>Status:</strong> {{ $customerStatus }}</div>
+                                    @if($overdueInstallments > 0)
+                                        <div class="info-item"><strong>Overdue:</strong> {{ $overdueInstallments }} installments</div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    @else
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="alert alert-info text-center">
-                                <h4>No Purchase History</h4>
-                                <p>This customer has not made any purchases yet.</p>
-                                <a href="{{ route('purchases.create') }}?customer={{ $customer->id }}" class="btn btn-primary no-print">Create First Purchase</a>
+
+                        <div class="financial-right">
+                            <div class="product-info">
+                                @if($customer->purchases->first())
+                                    @php $firstPurchase = $customer->purchases->first(); @endphp
+                                    <div class="info-item"><strong>Company:</strong> {{ $firstPurchase->product->company }}</div>
+                                    <div class="info-item"><strong>Model:</strong> {{ $firstPurchase->product->model }}</div>
+                                    <div class="info-item"><strong>Serial No:</strong> {{ $firstPurchase->product->serial_no }}</div>
+                                    <div class="info-item"><strong>Product Price:</strong> Rs. {{ number_format($firstPurchase->product->price, 0) }}</div>
+                                @else
+                                    <div class="info-item"><strong>Product:</strong> No purchase yet</div>
+                                @endif
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    <!-- Products Section -->
-                    @if($customer->purchases->count() > 0)
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h4>Purchase History</h4>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Purchase Date</th>
-                                            <th>Product Details</th>
-                                            <th>Serial No</th>
-                                            <th class="text-right">Total Price</th>
-                                            <th class="text-right">Advance</th>
-                                            <th class="text-right">Remaining</th>
-                                            <th class="text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($customer->purchases as $index => $purchase)
-                                        @php
-                                            $purchasePaid = $purchase->advance_payment + $purchase->installments()->where('status', 'paid')->sum('installment_amount');
-                                            $purchaseRemaining = $purchase->total_price - $purchasePaid;
-                                        @endphp
-                                        <tr>
-                                            <td>{{ $index + 1 }}</td>
-                                            <td>{{ $purchase->purchase_date->format('d/m/Y') }}</td>
-                                            <td>
-                                                <strong>{{ $purchase->product->company }} {{ $purchase->product->model }}</strong>
-                                            </td>
-                                            <td><code>{{ $purchase->product->serial_no }}</code></td>
-                                            <td class="text-right">{{ number_format($purchase->total_price, 2) }}</td>
-                                            <td class="text-right">{{ number_format($purchase->advance_payment, 2) }}</td>
-                                            <td class="text-right">{{ number_format($purchaseRemaining, 2) }}</td>
-                                            <td class="text-center">
-                                                <span class="badge badge-{{ $purchase->status == 'completed' ? 'success' : 'warning' }}">
-                                                    {{ ucfirst($purchase->status) }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Guarantors Section with Images -->
+                    <!-- Guarantors Section -->
                     @if($customer->guarantors->count() > 0)
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h4>Guarantor Information</h4>
-                            <div class="guarantors-section">
-                                @foreach($customer->guarantors as $guarantor)
-                                <div class="guarantor-card">
-                                    <div class="guarantor-header">
-                                        <div class="guarantor-photo-container">
-                                            @if($guarantor->image)
-                                                <img src="{{ asset($guarantor->image) }}" alt="Guarantor Photo" class="guarantor-photo">
-                                            @else
-                                                <div class="guarantor-photo-placeholder">
-                                                    {{ strtoupper(substr($guarantor->name, 0, 4)) }}
-                                                </div>
-                                            @endif
-                                            {{-- <div class="guarantor-photo-label">
-                                                <span class="badge badge-{{ $guarantor->guarantor_no == 1 ? 'primary' : 'secondary' }}">
-                                                    {{ $guarantor->guarantor_no == 1 ? 'Primary' : 'Secondary' }}
-                                                </span>
-                                            </div> --}}
-                                            <div class="guarantor-photo-label">
-                                                @php
-                                                    switch($guarantor->guarantor_no) {
-                                                        case 1:
-                                                            $label = 'Primary';
-                                                            $color = 'primary';
-                                                            break;
-                                                        case 2:
-                                                            $label = 'Secondary';
-                                                            $color = 'secondary';
-                                                            break;
-                                                        case 3:
-                                                            $label = 'Third';
-                                                            $color = 'info';
-                                                            break;
-                                                        case 4:
-                                                            $label = 'Reserve';
-                                                            $color = 'dark';
-                                                            break;
-                                                        default:
-                                                            $label = 'Unknown';
-                                                            $color = 'light';
-                                                    }
-                                                @endphp
-                                                <span class="badge badge-{{ $color }}">
-                                                    {{ $label }} Guarantor
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="guarantor-details">
-                                            <h5>{{ $guarantor->name }}</h5>
-                                            <p class="mb-1"><strong>Father:</strong> {{ $guarantor->father_name }}</p>
-                                            <p class="mb-1"><strong>Relation:</strong> {{ $guarantor->relation }}</p>
-                                            <p class="mb-1"><strong>NIC:</strong> <code>{{ $guarantor->nic }}</code></p>
-                                            <p class="mb-1"><strong>Phone:</strong> {{ $guarantor->phone }}</p>
-                                            @if($guarantor->occupation)
-                                                <p class="mb-1"><strong>Occupation:</strong> {{ $guarantor->occupation }}</p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="guarantor-addresses">
-                                        <div class="address-section">
-                                            <strong>Residence:</strong><br>
-                                            <small>{{ $guarantor->residence_address }}</small>
-                                        </div>
-                                        @if($guarantor->office_address)
-                                        <div class="address-section">
-                                            <strong>Office:</strong><br>
-                                            <small>{{ $guarantor->office_address }}</small>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    @else
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="alert alert-warning">
-                                <strong>No Guarantors Found!</strong> This customer should have guarantors before making purchases.
-                                <a href="{{ route('guarantors.create') }}?customer={{ $customer->id }}" class="btn btn-sm btn-warning no-print">Add Guarantor</a>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Payment History -->
-                    @php
-                        $allInstallments = collect();
-                        foreach($customer->purchases as $purchase) {
-                            $allInstallments = $allInstallments->merge($purchase->installments);
-                        }
-                        $allInstallments = $allInstallments->sortBy('due_date');
-                    @endphp
-
-                    @if($allInstallments->count() > 0)
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h4>Installment Payment Schedule</h4>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Due Date</th>
-                                            <th>Product</th>
-                                            <th class="text-right">Amount</th>
-                                            <th>Status</th>
-                                            <th>Date Paid</th>
-                                            <th>Receipt No</th>
-                                            <th class="text-right">Discount</th>
-                                            <th class="text-right">Fine</th>
-                                            <th>Recovery Officer</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($allInstallments as $installment)
-                                        @php
-                                            $isOverdue = $installment->status == 'pending' && $installment->due_date < now();
-                                        @endphp
-                                        <tr class="{{ $isOverdue ? 'table-danger' : ($installment->status == 'paid' ? 'table-success' : '') }}">
-                                            <td>{{ $installment->due_date ? $installment->due_date->format('d/m/Y') : '-' }}</td>
-                                            <td>
-                                                @if($installment->purchase && $installment->purchase->product)
-                                                    {{ $installment->purchase->product->company }} {{ $installment->purchase->product->model }}
+                    <div class="guarantors-section">
+                        <table class="guarantor-table">
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <th>
+                                            Guarantor # {{ $guarantor->guarantor_no }}
+                                            <div class="guarantor-photo-in-header">
+                                                @if($guarantor->image)
+                                                    <img src="{{ asset($guarantor->image) }}" alt="Guarantor {{ $guarantor->guarantor_no }}" class="guarantor-img-small">
                                                 @else
-                                                    -
+                                                    <div class="guarantor-placeholder-small">G{{ $guarantor->guarantor_no }}</div>
                                                 @endif
-                                            </td>
-                                            <td class="text-right">{{ number_format($installment->installment_amount, 0) }}</td>
-                                            <td>
-                                                <span class="badge badge-{{ $installment->status == 'paid' ? 'success' : ($isOverdue ? 'danger' : 'warning') }}">
-                                                    {{ $installment->status == 'paid' ? 'PAID' : ($isOverdue ? 'OVERDUE' : 'PENDING') }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $installment->date ? $installment->date->format('d/m/Y') : '-' }}</td>
-                                            <td>{{ $installment->receipt_no ?? '-' }}</td>
-                                            <td class="text-right">{{ $installment->discount > 0 ? number_format($installment->discount, 0) : '-' }}</td>
-                                            <td class="text-right">{{ $installment->fine_amount > 0 ? number_format($installment->fine_amount, 0) : '-' }}</td>
-                                            <td>{{ $installment->officer?->name ?? $installment->recovery_officer ?? '-' }}</td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                            </div>
+                                        </th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->name }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>F/H Name:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->father_name }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->phone }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>NIC:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->nic }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>Residence:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ substr($guarantor->residence_address, 0, 40) }}{{ strlen($guarantor->residence_address) > 40 ? '...' : '' }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>Office:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->office_address ? substr($guarantor->office_address, 0, 40) . (strlen($guarantor->office_address) > 40 ? '...' : '') : 'N/A' }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>Occupation:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->occupation ?? 'N/A' }}</td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <td><strong>Relation:</strong></td>
+                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                        <td>{{ $guarantor->relation }}</td>
+                                    @endforeach
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                     @endif
 
-                    <!-- Summary Footer -->
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="well">
-                                <div class="row">
-                                    <div class="col-sm-6">
-                                        <h4>Customer Status: 
-                                            <span class="badge badge-{{ $customerStatus == 'DEFAULTER' ? 'danger' : ($customerStatus == 'COMPLETED' ? 'success' : ($customerStatus == 'NO PURCHASES' ? 'secondary' : 'primary')) }}">
-                                                {{ $customerStatus }}
-                                            </span>
-                                        </h4>
-                                        @if($overdueInstallments > 0)
-                                            <p class="text-danger"><strong>⚠️ Action Required:</strong> {{ $overdueInstallments }} overdue payments need immediate attention.</p>
-                                        @endif
-                                    </div>
-                                    <div class="col-sm-6 text-right">
-                                        <p><strong>Statement Generated:</strong> {{ date('d M Y H:i') }}</p>
-                                        @if($totalPurchases > 0)
-                                            <p><strong>Outstanding Balance:</strong> Rs. {{ number_format($currentBalance, 2) }}</p>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Payment History Table (Compact) -->
+                    @if($customer->installments->count() > 0)
+                    <div class="payment-history">
+                        <table class="payment-table">
+                            <thead>
+                                <tr>
+                                    <th>S.#</th>
+                                    <th>Date</th>
+                                    <th>Rcv. #</th>
+                                    <th>Pre-Bal</th>
+                                    <th>Install.</th>
+                                    <th>Disc</th>
+                                    <th>Balance</th>
+                                    <th>Fine</th>
+                                    <th>F-Type</th>
+                                    <th>Recovery Officer</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($customer->installments()->orderBy('due_date')->take(10)->get() as $index => $installment)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $installment->date ? $installment->date->format('d/m/Y') : $installment->due_date->format('d/m/Y') }}</td>
+                                    <td>{{ $installment->receipt_no ?? substr($installment->id, -6) }}</td>
+                                    <td>{{ number_format($installment->pre_balance, 0) }}</td>
+                                    <td>{{ number_format($installment->installment_amount, 0) }}</td>
+                                    <td>{{ $installment->discount ?? 0 }}</td>
+                                    <td>{{ number_format($installment->balance, 0) }}</td>
+                                    <td>{{ $installment->fine_amount ?? 0 }}</td>
+                                    <td>{{ $installment->status == 'paid' ? 'Nothing' : 'Pending' }}</td>
+                                    <td>{{ $installment->officer?->name ?? 'N/A' }}</td>
+                                    <td>{{ $installment->status == 'paid' ? 'C' : 'P' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
+                    @endif
+
+                    @if($totalPurchases == 0)
+                    <div class="no-purchase-alert">
+                        <h4>No Purchase History</h4>
+                        <p>This customer has not made any purchases yet.</p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -389,278 +292,241 @@
 
 @push('styles')
 <style>
-    /* Customer Photo Styles */
-    .customer-photo-container {
+    /* Print optimized styles */
+    @page {
+        size: A4;
+        margin: 0.5in;
+    }
+
+    .statement-header {
         text-align: center;
         margin-bottom: 15px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
     }
 
-    .customer-photo {
+    .statement-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .print-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .customer-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        border: 1px solid #000;
+        padding: 10px;
+    }
+
+    .customer-basic-info {
+        flex: 1;
+        font-size: 12px;
+    }
+
+    .customer-photo-section {
         width: 120px;
+        text-align: center;
+    }
+
+    .customer-img, .customer-placeholder {
+        width: 100px;
         height: 120px;
-        border-radius: 8px;
+        border: 1px solid #000;
         object-fit: cover;
-        border: 3px solid #007bff;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
-    .customer-photo-placeholder {
-        width: 120px;
-        height: 120px;
-        border-radius: 8px;
-        background-color: #6c757d;
-        color: white;
+    .customer-placeholder {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5em;
+        background-color: #f0f0f0;
         font-weight: bold;
-        margin: 0 auto;
-        border: 3px solid #6c757d;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        font-size: 24px;
     }
 
-    .customer-photo-label {
-        font-size: 0.8em;
-        color: #6c757d;
-        margin-top: 5px;
-        font-weight: 500;
+    .info-row {
+        display: flex;
+        margin-bottom: 3px;
     }
 
-    /* Guarantor Cards */
+    .info-item {
+        flex: 1;
+        font-size: 11px;
+        margin-right: 10px;
+    }
+
+    .info-item.full-width {
+        flex: 3;
+    }
+
+    .financial-section {
+        display: flex;
+        margin-bottom: 15px;
+        font-size: 11px;
+    }
+
+    .financial-left {
+        flex: 2;
+        margin-right: 20px;
+    }
+
+    .financial-right {
+        flex: 1;
+    }
+
     .guarantors-section {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-
-    .guarantor-card {
-        flex: 1;
-        min-width: 300px;
-        border: 2px solid #dee2e6;
-        border-radius: 10px;
-        padding: 15px;
-        background-color: #f8f9fa;
-    }
-
-    .guarantor-header {
-        display: flex;
-        align-items: flex-start;
         margin-bottom: 15px;
+        position: relative;
     }
 
-    .guarantor-photo-container {
-        margin-right: 15px;
-        text-align: center;
-    }
-
-    .guarantor-photo {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #007bff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .guarantor-photo-placeholder {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background-color: #6c757d;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5em;
-        font-weight: bold;
-        border: 2px solid #6c757d;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .guarantor-photo-label {
-        margin-top: 5px;
-        font-size: 0.7em;
-    }
-
-    .guarantor-details {
-        flex: 1;
-    }
-
-    .guarantor-details h5 {
-        margin-bottom: 8px;
-        color: #495057;
-        font-weight: 600;
-    }
-
-    .guarantor-details p {
-        margin-bottom: 5px;
-        font-size: 0.9em;
-        color: #6c757d;
-    }
-
-    .guarantor-addresses {
-        border-top: 1px solid #dee2e6;
-        padding-top: 10px;
-        margin-top: 10px;
-    }
-
-    .address-section {
+    .guarantor-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
         margin-bottom: 10px;
     }
 
-    .address-section strong {
-        color: #495057;
-        font-size: 0.9em;
+    .guarantor-table th,
+    .guarantor-table td {
+        border: 1px solid #000;
+        padding: 3px;
+        text-align: left;
     }
 
-    .address-section small {
-        color: #6c757d;
-        line-height: 1.4;
+    .guarantor-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
     }
 
-    /* Print Styles */
+    .guarantor-photo-in-header {
+        text-align: center;
+        margin-top: 5px;
+    }
+
+    .guarantor-img-small, .guarantor-placeholder-small {
+        width: 50px;
+        height: 60px;
+        border: 1px solid #000;
+        object-fit: cover;
+    }
+
+    .guarantor-placeholder-small {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .payment-history {
+        margin-bottom: 15px;
+    }
+
+    .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+    }
+
+    .payment-table th,
+    .payment-table td {
+        border: 1px solid #000;
+        padding: 2px;
+        text-align: center;
+    }
+
+    .payment-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+    }
+
+    .no-purchase-alert {
+        text-align: center;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+    }
+
+    /* Hide elements when printing */
     @media print {
         .no-print,
         .ibox-tools,
+        .btn,
         .sidebar,
         .navbar,
-        .footer,
-        .btn {
+        .footer {
             display: none !important;
         }
-        
+
+        body {
+            font-size: 12px;
+        }
+
         .wrapper {
             margin: 0;
+            padding: 0;
         }
-        
+
         .ibox {
             box-shadow: none;
             border: none;
         }
-        
+
+        .ibox-content {
+            padding: 0;
+        }
+
+        /* Ensure single page */
+        .customer-section,
+        .financial-section,
+        .guarantors-section,
+        .payment-history {
+            page-break-inside: avoid;
+        }
+
+        /* Adjust font sizes for print */
+        .statement-header h3 {
+            font-size: 16px;
+        }
+
+        .info-item {
+            font-size: 10px;
+        }
+
+        .guarantor-table {
+            font-size: 9px;
+        }
+
+        .payment-table {
+            font-size: 8px;
+        }
+    }
+
+    /* Screen view styles */
+    @media screen {
         .ibox-content {
             padding: 20px;
         }
 
-        .customer-photo,
-        .customer-photo-placeholder {
-            width: 100px;
-            height: 100px;
-            border: 2px solid #000;
+        .customer-section {
+            background-color: #f8f9fa;
         }
 
-        .guarantor-photo,
-        .guarantor-photo-placeholder {
-            width: 60px;
-            height: 60px;
-            border: 1px solid #000;
+        .guarantor-table th {
+            background-color: #e9ecef;
         }
 
-        .guarantors-section {
-            display: block;
-        }
-
-        .guarantor-card {
-            margin-bottom: 15px;
-            page-break-inside: avoid;
-            border: 1px solid #000;
-            background-color: #f9f9f9;
-        }
-
-        .guarantor-header {
-            display: flex;
-            align-items: flex-start;
-        }
-
-        /* Ensure good spacing for print */
-        .row {
-            margin-bottom: 20px;
-        }
-
-        h4 {
-            margin-top: 25px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 5px;
-        }
-
-        /* Print color adjustments */
-        .badge {
-            border: 1px solid #000;
-            padding: 2px 6px;
-        }
-
-        .table {
-            font-size: 0.85em;
-        }
-
-        .table th {
-            border-bottom: 2px solid #000;
-            background-color: #f0f0f0;
-        }
-
-        .table td {
-            border-bottom: 1px solid #ccc;
-        }
-    }
-    
-    .invoice-table th {
-        border-top: 2px solid #000;
-        border-bottom: 2px solid #000;
-        background-color: #f8f9fa;
-    }
-    
-    .invoice-table td {
-        border-bottom: 1px solid #ddd;
-    }
-    
-    .table-danger {
-        background-color: #f8d7da !important;
-    }
-    
-    .table-success {
-        background-color: #d1edff !important;
-    }
-    
-    .badge {
-        font-size: 0.75em;
-    }
-    
-    code {
-        background-color: #f8f9fa;
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-size: 0.9em;
-    }
-    
-    .well {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        padding: 15px;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .guarantors-section {
-            display: block;
-        }
-        
-        .guarantor-card {
-            min-width: 100%;
-            margin-bottom: 15px;
-        }
-        
-        .guarantor-header {
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .guarantor-photo-container {
-            margin-right: 0;
-            margin-bottom: 10px;
+        .payment-table th {
+            background-color: #e9ecef;
         }
     }
 </style>
