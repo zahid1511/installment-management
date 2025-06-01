@@ -90,21 +90,12 @@
                                             class="btn btn-sm btn-warning custom-action-btn" title="Edit">
                                             <i class="fa fa-edit"></i>
                                         </a>
-                                        @if($totalPurchases == 0)
-                                            <form action="{{ route('customers.destroy', $customer->id) }}" method="POST"
-                                                style="display:inline-block;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button onclick="return confirm('Are you sure?')"
-                                                    class="btn btn-sm btn-danger custom-action-btn" title="Delete">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        @else
-                                            <button class="btn btn-sm btn-secondary custom-action-btn" disabled title="Cannot delete - has purchase history">
-                                                <i class="fa fa-lock"></i>
-                                            </button>
-                                        @endif
+                                        
+                                        <!-- Single Delete Button -->
+                                        <button onclick="confirmDelete({{ $customer->id }}, '{{ $customer->name }}', {{ $totalPurchases }})"
+                                            class="btn btn-sm btn-danger custom-action-btn" title="Delete Customer">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -131,162 +122,162 @@
 
 @push('styles')
 <style>
-/* Existing styles retained */
-.table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
+    /* Existing styles retained */
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
 
-.badge {
-    font-size: 0.75em;
-}
+    .badge {
+        font-size: 0.75em;
+    }
 
-.btn-group .btn {
-    margin-right: 2px;
-}
+    .btn-group .btn {
+        margin-right: 2px;
+    }
 
-.table-warning {
-    background-color: #fff3cd !important;
-}
+    .table-warning {
+        background-color: #fff3cd !important;
+    }
 
-/* New unique classes for enhanced styling */
-.custom-header {
-    padding: 15px 0;
-    border-bottom: 1px solid #e9ecef;
-}
+    /* New unique classes for enhanced styling */
+    .custom-header {
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
 
-.custom-add-btn {
-    transition: all 0.3s ease;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border-radius: 5px;
-}
+    .custom-add-btn {
+        transition: all 0.3s ease;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 5px;
+    }
 
-.custom-add-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
+    .custom-add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
 
-.custom-table-wrapper {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    overflow: hidden;
-}
+    .custom-table-wrapper {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        overflow: hidden;
+    }
 
-.custom-table {
-    margin-bottom: 0;
-    border-collapse: separate;
-    border-spacing: 0;
-}
+    .custom-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
 
-.field-spacing {
-    padding: 12px 15px !important;
-    vertical-align: middle;
-    border-right: 1px solid #dee2e6;
-}
-
-.field-spacing:last-child {
-    border-right: none;
-}
-
-.custom-row {
-    transition: background-color 0.3s ease;
-}
-
-.custom-row:hover {
-    background-color: #f1f3f5;
-}
-
-.photo-cell {
-    text-align: center;
-}
-
-.custom-photo-placeholder {
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-.custom-subtext {
-    display: block;
-    margin-top: 5px;
-    font-size: 0.85em;
-}
-
-.custom-badge {
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-weight: 500;
-}
-
-.action-btn-group .custom-action-btn {
-    padding: 6px 10px;
-    margin-right: 5px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.action-btn-group .custom-action-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.custom-alert {
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-.custom-empty-state {
-    padding: 20px;
-    border-radius: 8px;
-    background-color: #e7f1ff;
-}
-
-.custom-empty-state h4 {
-    margin-bottom: 10px;
-    font-size: 1.5rem;
-}
-
-.custom-empty-state p {
-    margin-bottom: 15px;
-    font-size: 1rem;
-}
-
-.custom-pagination {
-    margin-top: 20px;
-}
-
-.custom-pagination .pagination .page-link {
-    border-radius: 4px;
-    margin: 0 3px;
-    transition: all 0.2s ease;
-}
-
-.custom-pagination .pagination .page-link:hover {
-    background-color: #007bff;
-    color: #fff;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
     .field-spacing {
-        padding: 8px 10px !important;
+        padding: 12px 15px !important;
+        vertical-align: middle;
+        border-right: 1px solid #dee2e6;
     }
 
-    .custom-action-btn {
-        padding: 4px 8px;
-        font-size: 0.85rem;
+    .field-spacing:last-child {
+        border-right: none;
     }
 
-    .custom-table th, .custom-table td {
-        font-size: 0.9rem;
+    .custom-row {
+        transition: background-color 0.3s ease;
     }
 
-    .custom-photo-placeholder, img {
-        width: 40px !important;
-        height: 40px !important;
+    .custom-row:hover {
+        background-color: #f1f3f5;
     }
-}
+
+    .photo-cell {
+        text-align: center;
+    }
+
+    .custom-photo-placeholder {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .custom-subtext {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.85em;
+    }
+
+    .custom-badge {
+        padding: 6px 10px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .action-btn-group .custom-action-btn {
+        padding: 6px 10px;
+        margin-right: 5px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn-group .custom-action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-alert {
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .custom-empty-state {
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #e7f1ff;
+    }
+
+    .custom-empty-state h4 {
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+    }
+
+    .custom-empty-state p {
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+
+    .custom-pagination {
+        margin-top: 20px;
+    }
+
+    .custom-pagination .pagination .page-link {
+        border-radius: 4px;
+        margin: 0 3px;
+        transition: all 0.2s ease;
+    }
+
+    .custom-pagination .pagination .page-link:hover {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .field-spacing {
+            padding: 8px 10px !important;
+        }
+
+        .custom-action-btn {
+            padding: 4px 8px;
+            font-size: 0.85rem;
+        }
+
+        .custom-table th, .custom-table td {
+            font-size: 0.9rem;
+        }
+
+        .custom-photo-placeholder, img {
+            width: 40px !important;
+            height: 40px !important;
+        }
+    }
 </style>
 @endpush
 
@@ -306,5 +297,77 @@
             ]
         });
     });
+
+    function confirmDelete(customerId, customerName, totalPurchases) {
+        let message = '';
+        
+        if (totalPurchases > 0) {
+            message = `⚠️ COMPLETE DELETE WARNING!\n\nCustomer: ${customerName}\nThis customer has ${totalPurchases} purchase(s).\n\nThis will permanently delete:\n• Customer record\n• All ${totalPurchases} Purchase(s)\n• All Installments\n• All Guarantors\n• All Images\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?`;
+        } else {
+            message = `Delete Customer: ${customerName}\n\nThis will delete:\n• Customer record\n• All Guarantors\n• Customer image\n\nAre you sure?`;
+        }
+        
+        if (confirm(message)) {
+            // Show loading state
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/customers/${customerId}`;
+            
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            
+            const csrfField = document.createElement('input');
+            csrfField.type = 'hidden';
+            csrfField.name = '_token';
+            csrfField.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            form.appendChild(methodField);
+            form.appendChild(csrfField);
+            document.body.appendChild(form);
+            
+            // If it's an AJAX-supported browser, use AJAX
+            if (window.fetch) {
+                fetch(form.action, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfField.value,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ ' + data.message);
+                        window.location.reload();
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    alert('❌ An error occurred while deleting the customer.');
+                    console.error('Error:', error);
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                })
+                .finally(() => {
+                    document.body.removeChild(form);
+                });
+            } else {
+                // Fallback to form submission
+                form.submit();
+            }
+        }
+    }
 </script>
 @endpush

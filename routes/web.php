@@ -31,6 +31,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['role:Admin']], function () 
     //customers
     Route::resource('customers', CustomerController::class);
     Route::get('customers/{customer}/statement', [CustomerController::class, 'statement'])->name('customers.statement');
+  
 
     //guarantors
     Route::resource('guarantors', GuarantorController::class);

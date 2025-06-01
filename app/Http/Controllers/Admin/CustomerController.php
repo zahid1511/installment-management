@@ -111,25 +111,58 @@ class CustomerController extends Controller
     // Delete customer
     public function destroy(Customer $customer)
     {
-        // Check if customer has any purchases
-        if ($customer->purchases()->exists()) {
+        try {
+            \DB::beginTransaction();
+            
+            // Delete customer image if exists
+            if ($customer->image && file_exists(public_path('backend/img/customers/' . $customer->image))) {
+                unlink(public_path('backend/img/customers/' . $customer->image));
+            }
+            
+            // Delete guarantor images and guarantors
+            foreach ($customer->guarantors as $guarantor) {
+                if ($guarantor->image && file_exists(public_path($guarantor->image))) {
+                    unlink(public_path($guarantor->image));
+                }
+            }
+            $customer->guarantors()->delete();
+            
+            // Delete all installments for this customer
+            $customer->installments()->delete();
+            
+            // Delete all purchases for this customer
+            $customer->purchases()->delete();
+            
+            // Finally delete the customer
+            $customer->delete();
+            
+            \DB::commit();
+            
+            // Check if request is AJAX
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Customer and all related data deleted successfully.'
+                ]);
+            }
+            
             return redirect()->route('customers.index')
-                ->with('error', 'Cannot delete customer with purchase history.');
-        }
-
-        // Check if customer has any guarantors
-        if ($customer->guarantors()->exists()) {
+                ->with('success', 'Customer and all related data deleted successfully.');
+                
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            // Check if request is AJAX
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error deleting customer: ' . $e->getMessage()
+                ], 500);
+            }
+            
             return redirect()->route('customers.index')
-                ->with('error', 'Cannot delete customer with guarantors. Remove guarantors first.');
+                ->with('error', 'Error deleting customer: ' . $e->getMessage());
         }
-
-        // Delete customer image if exists
-        if ($customer->image && file_exists(public_path('backend/img/customers/' . $customer->image))) {
-            unlink(public_path('backend/img/customers/' . $customer->image));
-        }
-
-        $customer->delete();
-        return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
     }
 
     public function statement(Customer $customer)
