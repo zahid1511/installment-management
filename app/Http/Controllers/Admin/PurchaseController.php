@@ -79,17 +79,8 @@ class PurchaseController extends Controller
         return view('purchases.show', compact('purchase'));
     }
 
-    // NEW: Edit method
-    public function edit(Purchase $purchase)
+     public function edit(Purchase $purchase)
     {
-        // Check if purchase can be edited (no payments made yet)
-        $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
-        
-        if ($paidInstallments > 0) {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Cannot edit purchase with paid installments. Please contact administrator.');
-        }
-
         $customers = Customer::all();
         $products = Product::all();
         $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get();
@@ -97,17 +88,8 @@ class PurchaseController extends Controller
         return view('purchases.edit', compact('purchase', 'customers', 'products', 'recoveryOfficers'));
     }
 
-    // NEW: Update method
-    public function update(Request $request, Purchase $purchase)
+     public function update(Request $request, Purchase $purchase)
     {
-        // Check if purchase can be edited
-        $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
-        
-        if ($paidInstallments > 0) {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Cannot edit purchase with paid installments.');
-        }
-
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'product_id' => 'required|exists:products,id',
@@ -145,10 +127,11 @@ class PurchaseController extends Controller
                 'monthly_installment' => $monthlyInstallment,
                 'first_installment_date' => $request->first_installment_date,
                 'last_installment_date' => $lastInstallmentDate,
+                'status' => 'active', // Reset status to active
             ]);
 
-            // Delete old pending installments and recreate
-            $purchase->installments()->where('status', 'pending')->delete();
+            // Delete ALL previous installments (both paid and pending) and recreate
+            $purchase->installments()->delete();
             $this->createInstallmentSchedule($purchase, $request->recovery_officer_id);
 
             \DB::commit();
