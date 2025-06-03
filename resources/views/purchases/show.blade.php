@@ -7,22 +7,18 @@
         <div class="btn-group">
             @php
                 $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
-                $canEdit = $paidInstallments == 0;
             @endphp
             
             <!-- Edit Button -->
-            @if($canEdit)
-                <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-warning">
-                    <i class="fa fa-edit"></i> Edit Purchase
-                </a>
-            @endif
+            <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-warning">
+                <i class="fa fa-edit"></i> Edit Purchase
+            </a>
+      
             
             <!-- Delete Button -->
-            @if($canEdit)
-                <button onclick="confirmDelete()" class="btn btn-danger">
-                    <i class="fa fa-trash"></i> Delete Purchase
-                </button>
-            @endif
+            <button onclick="confirmDelete()" class="btn btn-danger">
+                <i class="fa fa-trash"></i> Delete Purchase
+            </button>
             
             <a href="{{ route('purchases.index') }}" class="btn btn-default">
                 <i class="fa fa-arrow-left"></i> Back to List
@@ -36,14 +32,6 @@
 
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
-    <!-- Warning about editing/deleting -->
-    @if($paidInstallments > 0)
-        <div class="alert alert-info">
-            <i class="fa fa-info-circle"></i>
-            <strong>Note:</strong> This purchase has {{ $paidInstallments }} paid installment(s) and cannot be edited or deleted to maintain data integrity.
-        </div>
     @endif
 
     <div class="row">
@@ -415,11 +403,7 @@ $(document).ready(function() {
 });
 
 function confirmDelete() {
-    @if($canEdit)
         $('#deleteModal').modal('show');
-    @else
-        alert('Cannot delete purchase with paid installments.');
-    @endif
 }
 
 $('#confirmDeleteBtn').on('click', function() {

@@ -172,13 +172,6 @@ class PurchaseController extends Controller
 
             // Check if any installments are paid
             $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
-            
-            if ($paidInstallments > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete purchase with paid installments. Please contact administrator.'
-                ], 400);
-            }
 
             // Delete all pending installments first
             $purchase->installments()->delete();

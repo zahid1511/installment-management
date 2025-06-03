@@ -78,7 +78,6 @@
                         @foreach($purchases as $purchase)
                         @php
                             $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
-                            $canEdit = $paidInstallments == 0;
                         @endphp
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -112,30 +111,18 @@
                                     </a>
                                     
                                     <!-- Edit Button -->
-                                    @if($canEdit)
-                                        <a href="{{ route('purchases.edit', $purchase) }}" 
-                                           class="btn btn-sm btn-warning" title="Edit Purchase">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                    @else
-                                        <button class="btn btn-sm btn-warning" disabled 
-                                                title="Cannot edit - has payments">
-                                            <i class="fa fa-edit"></i>
-                                        </button>
-                                    @endif
+                                    <a href="{{ route('purchases.edit', $purchase) }}" 
+                                        class="btn btn-sm btn-warning" title="Edit Purchase">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    
                                     
                                     <!-- Delete Button -->
-                                    @if($canEdit)
-                                        <button onclick="confirmDelete({{ $purchase->id }}, '{{ addslashes($purchase->customer->name) }}', '{{ addslashes($purchase->product->company . ' ' . $purchase->product->model) }}', {{ $paidInstallments }})" 
-                                                class="btn btn-sm btn-danger" title="Delete Purchase">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    @else
-                                        <button class="btn btn-sm btn-danger" disabled 
-                                                title="Cannot delete - has payments">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    @endif
+                                    <button onclick="confirmDelete({{ $purchase->id }}, '{{ addslashes($purchase->customer->name) }}', '{{ addslashes($purchase->product->company . ' ' . $purchase->product->model) }}', {{ $paidInstallments }})" 
+                                            class="btn btn-sm btn-danger" title="Delete Purchase">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                    
                                 </div>
                             </td>
                         </tr>
@@ -186,10 +173,6 @@ $(document).ready(function() {
 });
 
 function confirmDelete(purchaseId, customerName, productName, paidInstallments) {
-    if (paidInstallments > 0) {
-        alert('Cannot delete purchase with paid installments.');
-        return;
-    }
     
     $('#purchase-details').html(`
         <table class="table table-sm">
