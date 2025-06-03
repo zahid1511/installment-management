@@ -4,11 +4,46 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Purchase Details</h1>
-        <a href="{{ route('purchases.index') }}" class="btn btn-default">Back to List</a>
+        <div class="btn-group">
+            @php
+                $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
+                $canEdit = $paidInstallments == 0;
+            @endphp
+            
+            <!-- Edit Button -->
+            @if($canEdit)
+                <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-warning">
+                    <i class="fa fa-edit"></i> Edit Purchase
+                </a>
+            @endif
+            
+            <!-- Delete Button -->
+            @if($canEdit)
+                <button onclick="confirmDelete()" class="btn btn-danger">
+                    <i class="fa fa-trash"></i> Delete Purchase
+                </button>
+            @endif
+            
+            <a href="{{ route('purchases.index') }}" class="btn btn-default">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    <!-- Warning about editing/deleting -->
+    @if($paidInstallments > 0)
+        <div class="alert alert-info">
+            <i class="fa fa-info-circle"></i>
+            <strong>Note:</strong> This purchase has {{ $paidInstallments }} paid installment(s) and cannot be edited or deleted to maintain data integrity.
+        </div>
     @endif
 
     <div class="row">
@@ -18,9 +53,9 @@
                     <h3 class="panel-title">Purchase Information</h3>
                 </div>
                 <div class="panel-body">
-                    <table class="table">
+                    <table class="table table-condensed">
                         <tr>
-                            <th>Purchase Date:</th>
+                            <th width="40%">Purchase Date:</th>
                             <td>{{ $purchase->purchase_date->format('d/m/Y') }}</td>
                         </tr>
                         <tr>
@@ -37,7 +72,7 @@
                         </tr>
                         <tr>
                             <th>Total Price:</th>
-                            <td>Rs. {{ number_format($purchase->total_price, 2) }}</td>
+                            <td><strong>Rs. {{ number_format($purchase->total_price, 2) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Advance Payment:</th>
@@ -45,16 +80,28 @@
                         </tr>
                         <tr>
                             <th>Remaining Balance:</th>
-                            <td>Rs. {{ number_format($purchase->remaining_balance, 2) }}</td>
+                            <td><strong>Rs. {{ number_format($purchase->remaining_balance, 2) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Monthly Installment:</th>
                             <td>Rs. {{ number_format($purchase->monthly_installment, 2) }}</td>
                         </tr>
                         <tr>
+                            <th>Installment Period:</th>
+                            <td>{{ $purchase->installment_months }} months</td>
+                        </tr>
+                        <tr>
+                            <th>First Installment:</th>
+                            <td>{{ $purchase->first_installment_date->format('d/m/Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Installment:</th>
+                            <td>{{ $purchase->last_installment_date->format('d/m/Y') }}</td>
+                        </tr>
+                        <tr>
                             <th>Status:</th>
                             <td>
-                                <span class="label label-{{ $purchase->status == 'completed' ? 'primary' : 'warning' }}">
+                                <span class="label label-{{ $purchase->status == 'completed' ? 'success' : 'warning' }}">
                                     {{ ucfirst($purchase->status) }}
                                 </span>
                             </td>
@@ -70,18 +117,70 @@
                     <h3 class="panel-title">Payment Summary</h3>
                 </div>
                 <div class="panel-body">
-                    <table class="table">
+                    @php
+                        $totalPaid = $purchase->advance_payment + $purchase->installments()->where('status', 'paid')->sum('installment_amount');
+                        $remainingBalance = $purchase->getRemainingBalance();
+                        $overdueInstallments = $purchase->installments()->where('due_date', '<', now())->where('status', '!=', 'paid')->count();
+                        $totalInstallments = $purchase->installments()->count();
+                        $paidInstallmentCount = $purchase->installments()->where('status', 'paid')->count();
+                    @endphp
+                    
+                    <table class="table table-condensed">
                         <tr>
-                            <th>Total Paid:</th>
-                            <td>Rs. {{ number_format($purchase->advance_payment + $purchase->installments()->where('status', 'paid')->sum('installment_amount'), 2) }}</td>
+                            <th width="40%">Total Paid:</th>
+                            <td><strong class="text-success">Rs. {{ number_format($totalPaid, 2) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Remaining Balance:</th>
-                            <td>Rs. {{ number_format($purchase->getRemainingBalance(), 2) }}</td>
+                            <td>
+                                <strong class="{{ $remainingBalance > 0 ? 'text-warning' : 'text-success' }}">
+                                    Rs. {{ number_format($remainingBalance, 2) }}
+                                </strong>
+                            </td>
                         </tr>
                         <tr>
-                            <th>Defaulted Payments:</th>
-                            <td>{{ $purchase->installments()->where('due_date', '<', now())->where('status', '!=', 'paid')->count() }}</td>
+                            <th>Progress:</th>
+                            <td>
+                                <div class="progress" style="margin-bottom: 5px;">
+                                    @php $percentage = $totalPaid > 0 ? ($totalPaid / $purchase->total_price) * 100 : 0; @endphp
+                                    <div class="progress-bar progress-bar-{{ $percentage == 100 ? 'success' : 'info' }}" 
+                                         style="width: {{ $percentage }}%">
+                                        {{ number_format($percentage, 1) }}%
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ $paidInstallmentCount }}/{{ $totalInstallments }} installments paid</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Overdue Payments:</th>
+                            <td>
+                                @if($overdueInstallments > 0)
+                                    <span class="text-danger">
+                                        <strong>{{ $overdueInstallments }}</strong> overdue
+                                    </span>
+                                @else
+                                    <span class="text-success">No overdue payments</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Next Due Date:</th>
+                            <td>
+                                @php
+                                    $nextInstallment = $purchase->installments()
+                                        ->where('status', 'pending')
+                                        ->orderBy('due_date')
+                                        ->first();
+                                @endphp
+                                @if($nextInstallment)
+                                    {{ $nextInstallment->due_date->format('d/m/Y') }}
+                                    @if($nextInstallment->due_date < now())
+                                        <span class="text-danger">(Overdue)</span>
+                                    @endif
+                                @else
+                                    <span class="text-success">All paid</span>
+                                @endif
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -98,6 +197,7 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
+                            <th>Installment #</th>
                             <th>Due Date</th>
                             <th>Amount</th>
                             <th>Status</th>
@@ -112,31 +212,81 @@
                         @foreach($purchase->installments as $installment)
                         @php
                             $isOverdue = ($installment->status != 'paid' && $installment->due_date < now());
+                            $installmentNumber = $loop->iteration;
                         @endphp
-                        <tr class="{{ $isOverdue ? 'warning' : '' }}">
-                            <td>{{ $installment->due_date->format('d/m/Y') }}</td>
+                        <tr class="{{ $isOverdue ? 'danger' : '' }}" id="installment-{{ $installment->id }}">
+                            <td><strong>#{{ $installmentNumber }}</strong></td>
+                            <td>
+                                {{ $installment->due_date->format('d/m/Y') }}
+                                @if($isOverdue)
+                                    <br><small class="text-danger">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                        {{ $installment->due_date->diffForHumans() }}
+                                    </small>
+                                @endif
+                            </td>
                             <td>Rs. {{ number_format($installment->installment_amount, 2) }}</td>
                             <td>
                                 <span class="label label-{{ $installment->status == 'paid' ? 'success' : ($isOverdue ? 'danger' : 'warning') }}">
                                     {{ ucfirst($installment->status) }}
+                                    @if($isOverdue) (Overdue) @endif
                                 </span>
                             </td>
                             <td>{{ $installment->date ? $installment->date->format('d/m/Y') : '-' }}</td>
                             <td>{{ $installment->receipt_no ?? '-' }}</td>
-                            <td>Rs. {{ number_format($installment->fine_amount, 2) }}</td>
+                            <td>
+                                @if($installment->fine_amount > 0)
+                                    <span class="text-danger">Rs. {{ number_format($installment->fine_amount, 2) }}</span>
+                                @else
+                                    Rs. 0.00
+                                @endif
+                            </td>
                             <td>{{ $installment->officer?->name ?? $installment->recovery_officer ?? '-' }}</td>
                             <td>
                                 @if($installment->status == 'pending')
-                                    <button class="btn btn-sm btn-primary process-payment-btn" 
+                                    <button class="btn btn-sm btn-success process-payment-btn" 
                                         data-installment-id="{{ $installment->id }}">
-                                        Process Payment
+                                        <i class="fa fa-credit-card"></i> Pay
                                     </button>
+                                @else
+                                    <span class="text-muted">Paid</span>
                                 @endif
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Confirm Delete Purchase</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>Warning!</strong> This action will permanently delete this purchase and all its installment records.
+                </div>
+                <p>Are you sure you want to delete this purchase?</p>
+                <table class="table table-sm">
+                    <tr><th>Customer:</th><td>{{ $purchase->customer->name }}</td></tr>
+                    <tr><th>Product:</th><td>{{ $purchase->product->company }} {{ $purchase->product->model }}</td></tr>
+                    <tr><th>Total Amount:</th><td>Rs. {{ number_format($purchase->total_price, 2) }}</td></tr>
+                    <tr><th>Paid Installments:</th><td>{{ $paidInstallments }}</td></tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fa fa-trash"></i> Delete Purchase
+                </button>
             </div>
         </div>
     </div>
@@ -246,40 +396,59 @@ $(document).ready(function() {
     });
     
     function populateRecoveryOfficers(selectedOfficerId) {
-        $.ajax({
-            url: '{{ route("recovery-officers.index") }}', // We'll need to create an API endpoint
-            type: 'GET',
-            success: function(officers) {
-                var options = '<option value="">Select Recovery Officer</option>';
-                
-                // If we have officers data, populate the dropdown
-                // For now, let's use the selected officer and populate from the existing data
-                @php
-                $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
-                @endphp
-                
-                var officersData = @json($activeOfficers);
-                
-                $.each(officersData, function(index, officer) {
-                    var selected = (officer.id == selectedOfficerId) ? 'selected' : '';
-                    options += '<option value="' + officer.id + '" ' + selected + '>' + 
-                              officer.name + ' (' + officer.employee_id + ')</option>';
-                });
-                
-                $('#recovery_officer_id').html(options);
-            },
-            error: function() {
-                // Fallback: populate with existing data
-                var options = '<option value="">Select Recovery Officer</option>';
-                @foreach(\App\Models\RecoveryOfficer::active()->get() as $officer)
-                var selected = ({{ $officer->id }} == selectedOfficerId) ? 'selected' : '';
-                options += '<option value="{{ $officer->id }}" ' + selected + '>{{ $officer->name }} ({{ $officer->employee_id }})</option>';
-                @endforeach
-                
-                $('#recovery_officer_id').html(options);
-            }
+        var options = '<option value="">Select Recovery Officer</option>';
+        
+        @php
+        $activeOfficers = \App\Models\RecoveryOfficer::active()->get();
+        @endphp
+        
+        var officersData = @json($activeOfficers);
+        
+        $.each(officersData, function(index, officer) {
+            var selected = (officer.id == selectedOfficerId) ? 'selected' : '';
+            options += '<option value="' + officer.id + '" ' + selected + '>' + 
+                      officer.name + ' (' + officer.employee_id + ')</option>';
         });
+        
+        $('#recovery_officer_id').html(options);
     }
+});
+
+function confirmDelete() {
+    @if($canEdit)
+        $('#deleteModal').modal('show');
+    @else
+        alert('Cannot delete purchase with paid installments.');
+    @endif
+}
+
+$('#confirmDeleteBtn').on('click', function() {
+    // Show loading state
+    $(this).html('<i class="fa fa-spinner fa-spin"></i> Deleting...').prop('disabled', true);
+    
+    $.ajax({
+        url: '{{ route("purchases.destroy", $purchase) }}',
+        type: 'DELETE',
+        data: {
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                window.location.href = '{{ route("purchases.index") }}';
+            } else {
+                alert('Error: ' + response.message);
+                $('#confirmDeleteBtn').html('<i class="fa fa-trash"></i> Delete Purchase').prop('disabled', false);
+            }
+        },
+        error: function(xhr) {
+            let message = 'An error occurred while deleting the purchase.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+            }
+            alert('Error: ' + message);
+            $('#confirmDeleteBtn').html('<i class="fa fa-trash"></i> Delete Purchase').prop('disabled', false);
+        }
+    });
 });
 </script>
 @endpush

@@ -7,7 +7,7 @@ use App\Models\Purchase;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Installment;
-use App\Models\RecoveryOfficer; // Add this import
+use App\Models\RecoveryOfficer;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -23,14 +23,12 @@ class PurchaseController extends Controller
     {
         $customers = Customer::all();
         $products = Product::all();
-        $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get(); // Add this
+        $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get();
         return view('purchases.create', compact('customers', 'products', 'recoveryOfficers'));
     }
 
-
-     public function store(Request $request)
+    public function store(Request $request)
     {
-        
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'product_id' => 'required|exists:products,id',
@@ -38,9 +36,10 @@ class PurchaseController extends Controller
             'total_price' => 'required|numeric|min:0',
             'advance_payment' => 'required|numeric|min:0',
             'installment_months' => 'required|integer|min:1',
-            'first_installment_date' => 'required|date|after_or_equal:purchase_date', // Changed this
+            'first_installment_date' => 'required|date|after_or_equal:purchase_date',
             'recovery_officer_id' => 'required|exists:recovery_officers,id',
         ]);
+
         // Calculate values
         $remainingBalance = $request->total_price - $request->advance_payment;
         $monthlyInstallment = Purchase::calculateMonthlyInstallment(
@@ -80,6 +79,140 @@ class PurchaseController extends Controller
         return view('purchases.show', compact('purchase'));
     }
 
+    // NEW: Edit method
+    public function edit(Purchase $purchase)
+    {
+        // Check if purchase can be edited (no payments made yet)
+        $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
+        
+        if ($paidInstallments > 0) {
+            return redirect()->route('purchases.show', $purchase)
+                ->with('error', 'Cannot edit purchase with paid installments. Please contact administrator.');
+        }
+
+        $customers = Customer::all();
+        $products = Product::all();
+        $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get();
+        
+        return view('purchases.edit', compact('purchase', 'customers', 'products', 'recoveryOfficers'));
+    }
+
+    // NEW: Update method
+    public function update(Request $request, Purchase $purchase)
+    {
+        // Check if purchase can be edited
+        $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
+        
+        if ($paidInstallments > 0) {
+            return redirect()->route('purchases.show', $purchase)
+                ->with('error', 'Cannot edit purchase with paid installments.');
+        }
+
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'product_id' => 'required|exists:products,id',
+            'purchase_date' => 'required|date',
+            'total_price' => 'required|numeric|min:0',
+            'advance_payment' => 'required|numeric|min:0',
+            'installment_months' => 'required|integer|min:1',
+            'first_installment_date' => 'required|date|after_or_equal:purchase_date',
+            'recovery_officer_id' => 'required|exists:recovery_officers,id',
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            // Calculate new values
+            $remainingBalance = $request->total_price - $request->advance_payment;
+            $monthlyInstallment = Purchase::calculateMonthlyInstallment(
+                $request->total_price,
+                $request->advance_payment,
+                $request->installment_months
+            );
+
+            $lastInstallmentDate = Carbon::parse($request->first_installment_date)
+                ->addMonths($request->installment_months - 1);
+
+            // Update purchase
+            $purchase->update([
+                'customer_id' => $request->customer_id,
+                'product_id' => $request->product_id,
+                'purchase_date' => $request->purchase_date,
+                'total_price' => $request->total_price,
+                'advance_payment' => $request->advance_payment,
+                'remaining_balance' => $remainingBalance,
+                'installment_months' => $request->installment_months,
+                'monthly_installment' => $monthlyInstallment,
+                'first_installment_date' => $request->first_installment_date,
+                'last_installment_date' => $lastInstallmentDate,
+            ]);
+
+            // Delete old pending installments and recreate
+            $purchase->installments()->where('status', 'pending')->delete();
+            $this->createInstallmentSchedule($purchase, $request->recovery_officer_id);
+
+            \DB::commit();
+
+            return redirect()->route('purchases.show', $purchase)
+                ->with('success', 'Purchase updated successfully');
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            return redirect()->back()
+                ->with('error', 'Error updating purchase: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    // NEW: Destroy method
+    public function destroy(Purchase $purchase)
+    {
+        try {
+            \DB::beginTransaction();
+
+            // Check if any installments are paid
+            $paidInstallments = $purchase->installments()->where('status', 'paid')->count();
+            
+            if ($paidInstallments > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete purchase with paid installments. Please contact administrator.'
+                ], 400);
+            }
+
+            // Delete all pending installments first
+            $purchase->installments()->delete();
+            
+            // Delete the purchase
+            $purchase->delete();
+
+            \DB::commit();
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase deleted successfully.'
+                ]);
+            }
+
+            return redirect()->route('purchases.index')
+                ->with('success', 'Purchase deleted successfully.');
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error deleting purchase: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('purchases.index')
+                ->with('error', 'Error deleting purchase: ' . $e->getMessage());
+        }
+    }
+
     private function createInstallmentSchedule(Purchase $purchase, $recoveryOfficerId)
     {
         $currentDate = Carbon::parse($purchase->first_installment_date);
@@ -88,7 +221,6 @@ class PurchaseController extends Controller
         for ($i = 1; $i <= $purchase->installment_months; $i++) {
             $dueDate = $currentDate->copy()->addMonths($i - 1);
             
-            // Use local variable instead of modifying purchase object
             $installmentAmount = $purchase->monthly_installment;
             
             // Calculate balance for this installment
@@ -112,7 +244,7 @@ class PurchaseController extends Controller
                 'balance' => $newBalance,
                 'fine_amount' => 0,
                 'status' => 'pending',
-                'recovery_officer_id' => $recoveryOfficerId, // Use the passed officer ID directly
+                'recovery_officer_id' => $recoveryOfficerId,
                 'remarks' => "Installment $i of {$purchase->installment_months}",
             ]);
 
@@ -145,8 +277,7 @@ class PurchaseController extends Controller
         ]);
     }
 
-    // Update the processPayment method in PurchaseController
-        public function processPayment(Request $request, Purchase $purchase)
+    public function processPayment(Request $request, Purchase $purchase)
     {
         $request->validate([
             'installment_id' => 'required|exists:installments,id',
