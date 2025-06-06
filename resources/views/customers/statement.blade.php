@@ -44,7 +44,7 @@
                     <!-- Header with Company Info -->
                     <div class="statement-header">
                         <div class="company-info">
-                            <h3>Customer Account Information Detail</h3>
+                            <h6>Customer Account Information Detail</h6>
                             <div class="print-info">
                                 <div>Print Date: {{ date('d-M-Y') }}</div>
                                 <div>Print Time: {{ date('H:i:s A') }}</div>
@@ -170,7 +170,7 @@
                             <thead>
                                 <tr>
                                     <th>Criteria</th>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <th>
                                             Guarantor # {{ $guarantor->guarantor_no }}
                                             <div class="guarantor-photo-in-header">
@@ -187,49 +187,49 @@
                             <tbody>
                                 <tr>
                                     <td><strong>Name:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->name }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>F/H Name:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->father_name }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>Phone:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->phone }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>NIC:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->nic }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>Residence:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ substr($guarantor->residence_address, 0, 40) }}{{ strlen($guarantor->residence_address) > 40 ? '...' : '' }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>Office:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->office_address ? substr($guarantor->office_address, 0, 40) . (strlen($guarantor->office_address) > 40 ? '...' : '') : 'N/A' }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>Occupation:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->occupation ?? 'N/A' }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
                                     <td><strong>Relation:</strong></td>
-                                    @foreach($customer->guarantors->take(2) as $guarantor)
+                                    @foreach($customer->guarantors->take(4) as $guarantor)
                                         <td>{{ $guarantor->relation }}</td>
                                     @endforeach
                                 </tr>

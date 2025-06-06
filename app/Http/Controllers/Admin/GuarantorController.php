@@ -28,7 +28,7 @@ class GuarantorController extends Controller
             'name' => 'required|string|max:255',
             'father_name' => 'required|string|max:255',
             'relation' => 'required|string|max:255',
-            'nic' => 'required|string|unique:guarantors,nic|max:20',
+            'nic' => 'required|string:guarantors,nic|max:20',
             'phone' => 'required|string|max:20',
             'residence_address' => 'required|string',
             'office_address' => 'nullable|string',
