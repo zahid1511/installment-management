@@ -237,7 +237,17 @@
                                         <i class="fa fa-credit-card"></i> Pay
                                     </button>
                                 @else
-                                    <span class="text-muted">Paid</span>
+                                    <div class="btn-group" role="group">
+                                        <span class="text-success">
+                                            <i class="fa fa-check"></i> Paid
+                                        </span>
+                                        <a href="{{ route('installments.receipt', $installment->id) }}" 
+                                        class="btn btn-sm btn-info" 
+                                        target="_blank" 
+                                        title="Print Receipt">
+                                            <i class="fa fa-print"></i> Print
+                                        </a>
+                                    </div>
                                 @endif
                             </td>
                         </tr>

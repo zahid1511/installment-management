@@ -48,7 +48,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['role:Admin']], function () 
     Route::resource('purchases', PurchaseController::class);
     Route::post('purchases/{purchase}/process-payment', [PurchaseController::class, 'processPayment'])->name('purchases.process-payment');
     Route::get('purchases/installment/{installmentId}/details', [PurchaseController::class, 'getInstallmentDetails'])->name('purchases.installment-details');
-
+    
 
     //installments
     Route::get('installments', [InstallmentController::class, 'index'])->name('installments.index');
@@ -60,6 +60,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['role:Admin']], function () 
     Route::get('installments/overdue', [InstallmentController::class, 'overdueReport'])->name('installments.overdue');
     Route::get('installments/officer/{officerId}', [InstallmentController::class, 'officerInstallments'])->name('installments.officer');
     Route::get('/customer/{id}/installment-info', [InstallmentController::class, 'getCustomerInstallmentInfo']);
+    // ADD this new route
+    Route::get('installments/{installmentId}/receipt', [PurchaseController::class, 'printReceipt'])->name('installments.receipt');
 
 
     
