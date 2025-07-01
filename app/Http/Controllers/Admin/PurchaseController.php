@@ -84,7 +84,7 @@ class PurchaseController extends Controller
         $customers = Customer::all();
         $products = Product::all();
         $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get();
-        
+
         return view('purchases.edit', compact('purchase', 'customers', 'products', 'recoveryOfficers'));
     }
 
@@ -158,7 +158,7 @@ class PurchaseController extends Controller
 
             // Delete all pending installments first
             $purchase->installments()->delete();
-            
+
             // Delete the purchase
             $purchase->delete();
 
@@ -196,9 +196,9 @@ class PurchaseController extends Controller
 
         for ($i = 1; $i <= $purchase->installment_months; $i++) {
             $dueDate = $currentDate->copy()->addMonths($i - 1);
-            
+
             $installmentAmount = $purchase->monthly_installment;
-            
+
             // Calculate balance for this installment
             if ($i == $purchase->installment_months) {
                 // Last installment takes remaining balance
@@ -231,14 +231,14 @@ class PurchaseController extends Controller
     public function getInstallmentDetails($installmentId)
     {
         $installment = Installment::with(['customer', 'officer', 'purchase'])->findOrFail($installmentId);
-        
+
         // Generate next receipt number
         $lastReceipt = Installment::where('receipt_no', '!=', null)
             ->orderBy('id', 'desc')
             ->first();
-        
+
         $nextReceiptNumber = 'R-' . str_pad(
-            ($lastReceipt ? intval(substr($lastReceipt->receipt_no, 2)) + 1 : 1001), 
+            ($lastReceipt ? intval(substr($lastReceipt->receipt_no, 2)) + 1 : 1001),
             4, '0', STR_PAD_LEFT
         );
 
@@ -258,7 +258,7 @@ class PurchaseController extends Controller
         $request->validate([
             'installment_id' => 'required|exists:installments,id',
             'payment_date' => 'required|date',
-            'receipt_no' => 'required|string|unique:installments,receipt_no',
+            // 'receipt_no' => 'required|string|unique:installments,receipt_no',
             'payment_amount' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'recovery_officer_id' => 'required|exists:recovery_officers,id',
@@ -267,14 +267,14 @@ class PurchaseController extends Controller
         ]);
 
         $installment = Installment::findOrFail($request->installment_id);
-        
+
         // Calculate fine if overdue
         $fine = $installment->calculateFine();
-        
+
         // Calculate new balance after payment
         $totalPayment = $request->payment_amount - ($request->discount ?? 0);
         $newBalance = max(0, $installment->pre_balance - $totalPayment);
-        
+
         // Update installment
         $installment->update([
             'date' => $request->payment_date,
@@ -304,7 +304,7 @@ class PurchaseController extends Controller
             ->where('status', 'pending')
             ->where('due_date', '<', now())
             ->exists();
-        
+
         $customer->update(['is_defaulter' => $isDefaulter]);
 
         return redirect()->route('purchases.show', $purchase)
@@ -321,7 +321,7 @@ class PurchaseController extends Controller
             ->get();
 
         $currentBalance = $newBalance;
-        
+
         foreach ($subsequentInstallments as $installment) {
             $installment->update(['pre_balance' => $currentBalance]);
             $currentBalance = max(0, $currentBalance - $installment->installment_amount);

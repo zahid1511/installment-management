@@ -29,14 +29,14 @@ class InstallmentController extends Controller
         }
 
         // Order by: 1) Overdue first, 2) Then by due date ascending
-        $installments = $query->orderByRaw("CASE 
-                                 WHEN status = 'pending' AND due_date < NOW() THEN 1 
-                                 WHEN status = 'pending' THEN 2 
-                                 ELSE 3 
+        $installments = $query->orderByRaw("CASE
+                                 WHEN status = 'pending' AND due_date < NOW() THEN 1
+                                 WHEN status = 'pending' THEN 2
+                                 ELSE 3
                                END")
                              ->orderBy('due_date', 'asc')
                              ->orderBy('id', 'asc')
-                             ->paginate(15);
+                             ->paginate(50);
 
         return view('installments.index', compact('installments'));
     }
@@ -50,9 +50,9 @@ class InstallmentController extends Controller
         $lastReceipt = Installment::whereNotNull('receipt_no')
                                  ->orderBy('id', 'desc')
                                  ->first();
-        
+
         $nextReceiptNumber = 'R-' . str_pad(
-            ($lastReceipt ? intval(substr($lastReceipt->receipt_no, 2)) + 1 : 1001), 
+            ($lastReceipt ? intval(substr($lastReceipt->receipt_no, 2)) + 1 : 1001),
             4, '0', STR_PAD_LEFT
         );
 
@@ -70,7 +70,7 @@ class InstallmentController extends Controller
     // public function create() - REMOVED
 
     /**
-     * Remove store method since installments are auto-generated from purchases  
+     * Remove store method since installments are auto-generated from purchases
      */
     // public function store() - REMOVED
 
@@ -84,7 +84,7 @@ class InstallmentController extends Controller
 
         $customers = Customer::all();
         $recoveryOfficers = RecoveryOfficer::where('is_active', true)->get();
-        
+
         return view('installments.edit', compact('installment', 'customers', 'recoveryOfficers'));
     }
 
@@ -136,7 +136,7 @@ class InstallmentController extends Controller
         }
 
         $installment->delete();
-        
+
         return redirect()->route('installments.index')
             ->with('success', 'Manual installment deleted successfully');
     }
@@ -161,7 +161,7 @@ class InstallmentController extends Controller
     public function officerInstallments($officerId)
     {
         $officer = RecoveryOfficer::findOrFail($officerId);
-        
+
         $installments = Installment::with(['customer', 'purchase.product'])
             ->where('recovery_officer_id', $officerId)
             ->orderBy('due_date')
