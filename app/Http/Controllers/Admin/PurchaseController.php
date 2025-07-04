@@ -327,4 +327,16 @@ class PurchaseController extends Controller
             $currentBalance = max(0, $currentBalance - $installment->installment_amount);
         }
     }
+
+    public function printReceipt($installmentId)
+    {
+        $installment = Installment::with(['customer', 'purchase.product', 'officer'])->findOrFail($installmentId);
+        
+        // Check if installment is paid
+        if ($installment->status !== 'paid') {
+            return redirect()->back()->with('error', 'Receipt can only be printed for paid installments.');
+        }
+        
+        return view('purchases.receipt', compact('installment'));
+    }
 }
