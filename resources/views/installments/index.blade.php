@@ -132,7 +132,7 @@
                                 @if($isOverdue)
                                     <br><small class="text-danger">
                                         <i class="fa fa-exclamation-triangle"></i>
-                                        {{ $installment->due_date->diffForHumans() }}
+                                        {{ $installment->due_date?->diffForHumans() ?? 'Due date not set' }}
                                     </small>
                                 @endif
                             </td>
@@ -149,24 +149,24 @@
                             <td>
                                 @if($installment->purchase_id)
                                     <!-- For purchase-based installments, redirect to purchase page -->
-                                    <a href="{{ route('purchases.show', $installment->purchase_id) }}" 
+                                    <a href="{{ route('purchases.show', $installment->purchase_id) }}"
                                        class="btn btn-sm btn-info" title="View Purchase Details">
                                         <i class="fa fa-eye"></i>
                                     </a>
                                     @if($installment->status == 'pending')
-                                        <a href="{{ route('purchases.show', $installment->purchase_id) }}#installment-{{ $installment->id }}" 
+                                        <a href="{{ route('purchases.show', $installment->purchase_id) }}#installment-{{ $installment->id }}"
                                            class="btn btn-sm btn-success" title="Process Payment">
                                             <i class="fa fa-credit-card"></i>
                                         </a>
                                     @endif
                                 @else
                                     <!-- For manual installments, allow edit/delete -->
-                                    <a href="{{ route('installments.edit', $installment->id) }}" 
+                                    <a href="{{ route('installments.edit', $installment->id) }}"
                                        class="btn btn-sm btn-warning" title="Edit">
                                         <i class="fa fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('installments.destroy', $installment->id) }}" 
-                                          method="POST" style="display: inline-block;" 
+                                    <form action="{{ route('installments.destroy', $installment->id) }}"
+                                          method="POST" style="display: inline-block;"
                                           onsubmit="return confirm('Are you sure you want to delete this installment?')">
                                         @csrf
                                         @method('DELETE')
@@ -204,7 +204,7 @@ $(document).ready(function() {
         order: [[3, 'asc']], // Sort by due date column (index 3)
         columnDefs: [
             { targets: [9], orderable: false }, // Disable sorting for Actions column
-            { 
+            {
                 targets: [3], // Due date column
                 type: 'date',
                 render: function(data, type, row) {

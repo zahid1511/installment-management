@@ -29,7 +29,7 @@
                         $totalMonthlyInstallments = $customer->purchases()->where('status', 'active')->sum('monthly_installment');
                         $pendingInstallments = $customer->installments()->where('status', 'pending')->count();
                         $overdueInstallments = $customer->installments()->where('status', 'pending')->where('due_date', '<', now())->count();
-                        
+
                         // Status calculation
                         $customerStatus = 'ACTIVE';
                         if ($totalPurchases == 0) {
@@ -40,7 +40,7 @@
                             $customerStatus = 'DEFAULTER';
                         }
                     @endphp
-                    
+
                     <!-- Header with Company Info -->
                     <div class="statement-header">
                         <div class="company-info">
