@@ -44,7 +44,7 @@ class PurchasesSeeder extends Seeder
                 'monthly_installment' => $monthlyInstallment,
                 'first_installment_date' => Carbon::now()->subDays(rand(15, 90)),
                 'last_installment_date' => Carbon::now()->addMonths($months - 1),
-                'status' => 'active'
+                'status' => 'active' 
             ]);
             
             // Create installment schedule
